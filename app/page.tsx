@@ -18,6 +18,7 @@ import {
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const Navbar = () => (
   <header className="fixed top-0 left-0 right-0 z-[100] px-6 py-4">
@@ -38,10 +39,10 @@ const Navbar = () => (
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="text-sm font-bold text-slate-600 hover:text-slate-900 px-4 py-2 transition-colors">Log In</button>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-100">
+        <Link href="/dashboard" className="text-sm font-bold text-slate-600 hover:text-slate-900 px-4 py-2 transition-colors">Log In</Link>
+        <Link href="/dashboard" className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-100">
           Get Started
-        </button>
+        </Link>
       </div>
     </nav>
   </header>
@@ -138,10 +139,10 @@ export default function LandingPage() {
                   Streamline lead capturing, automate WhatsApp follow-ups, and visualize your entire property pipeline in one intelligent dashboard. Designed specifically for the Indian real estate landscape.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <button className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-xl shadow-indigo-600/20 group text-lg">
+                  <Link href="/dashboard" className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-xl shadow-indigo-600/20 group text-lg">
                     Start Your 14-Day Free Trial
                     <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  </Link>
                   <button className="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-8 py-4 rounded-2xl font-bold transition-all text-lg">
                     Book a Demo
                   </button>
