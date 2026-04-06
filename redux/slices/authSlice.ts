@@ -7,10 +7,15 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
+const getInitialToken = () => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('builder_token');
+};
+
 const initialState: AuthState = {
   user: null,
   builder: null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('builder_token') : null,
+  token: getInitialToken(),
   isAuthenticated: false,
 };
 
@@ -25,6 +30,8 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       if (typeof window !== 'undefined') {
         localStorage.setItem('builder_token', action.payload.token);
+        // Set cookie for middleware to see
+        document.cookie = `builder_token=${action.payload.token}; path=/; max-age=86400; SameSite=Lax`;
       }
     },
     logout: (state) => {
@@ -34,6 +41,8 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       if (typeof window !== 'undefined') {
         localStorage.removeItem('builder_token');
+        // Remove cookie
+        document.cookie = "builder_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       }
     },
   },

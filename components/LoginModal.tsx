@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import axios from '@/lib/axios';
+import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { setAuth } from '@/redux/slices/authSlice';
 import { useRouter } from 'next/navigation';
@@ -22,6 +23,12 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  const handleClose = () => {
+    setFormData({ email: '', password: '' });
+    setLoading(false);
+    onClose();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,9 +42,10 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         }));
         router.push('/dashboard');
         onClose();
+        toast.success("Welcome back!");
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -51,7 +59,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        onClick={onClose}
+        onClick={handleClose}
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
       />
       
@@ -62,7 +70,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         className="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden p-8 md:p-10"
       >
         <button 
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-6 right-6 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
         >
           <X size={18} />

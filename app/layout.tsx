@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from '@/redux/Providers';
+import { Toaster } from 'react-hot-toast';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {children}
         </Providers>
+        <Toaster position="top-center" />
       </body>
     </html>
   );

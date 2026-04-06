@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Phone, User, Mail, Lock, Building, MapPin, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import axios from '@/lib/axios';
+import { toast } from 'react-hot-toast';
 
 interface Plan {
   _id: string;
@@ -38,6 +39,33 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
     razorpayPaymentId: '',
     razorpaySignature: '',
   });
+  const [activePlan, setActivePlan] = useState<Plan | null>(plan);
+
+  // Sync prop plan to activePlan when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setActivePlan(plan);
+    }
+  }, [isOpen, plan]);
+
+  const handleClose = () => {
+    setStep(1);
+    setFormData({
+      phone: '',
+      fullName: '',
+      email: '',
+      password: '',
+      projectName: '',
+      builderName: '',
+      companyName: '',
+      address: '',
+      razorpayOrderId: '',
+      razorpayPaymentId: '',
+      razorpaySignature: '',
+    });
+    setLoading(false);
+    onClose();
+  };
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -59,13 +87,14 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
       const { status, data } = response.data;
 
       if (status === "ALREADY_REGISTERED") {
-        alert("This number is already registered. Please log in.");
+        toast.error("This number is already registered. Please log in.");
         onClose();
         return;
       }
 
       if (status === "PAYMENT_DONE_PENDING_DETAILS") {
         // Resume registration from Step 3
+        setActivePlan(data.planId); // Set the plan from saved data
         setFormData({
           ...formData,
           razorpayOrderId: data.razorpayOrderId,
@@ -75,11 +104,18 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
         setStep(3);
       } else {
         // New User
+        // If we don't have a plan yet, we should ideally ask to pick one, 
+        // but for now we'll assume they'll pick one if they came from a pricing card
+        if (!activePlan) {
+          toast.error("Please select a plan first.");
+          onClose();
+          return;
+        }
         setStep(2);
       }
     } catch (err) {
       console.error(err);
-      alert("Error checking status. Please try again.");
+      toast.error("Error checking status. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -92,7 +128,7 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
     try {
       const res = await loadRazorpayScript();
       if (!res) {
-        alert('Razorpay SDK failed to load.');
+        toast.error('Razorpay SDK failed to load.');
         setLoading(false);
         return;
       }
@@ -100,11 +136,17 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
       const response = await axios.post('/builder/create-order', {
         amount: plan.price,
         planId: plan._id,
+        phone: formData.phone, // Pass phone for security and tracking
       });
       const orderData = response.data;
 
       if (!orderData.success) {
-        alert('Could not create order.');
+        if (orderData.resume) {
+          toast.success("Payment already verified! Please complete your details.");
+          setStep(3);
+          return;
+        }
+        toast.error(orderData.message || 'Could not create order.');
         setLoading(false);
         return;
       }
@@ -122,8 +164,8 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
             // Save payment info IMMEDIATELY to support resume flow
             await axios.post('/builder/save-payment-info', {
               phone: formData.phone,
-              planId: plan._id,
-              amountPaid: plan.price,
+              planId: activePlan?._id,
+              amountPaid: activePlan?.price,
               razorpayOrderId: paymentResponse.razorpay_order_id,
               razorpayPaymentId: paymentResponse.razorpay_payment_id,
               razorpaySignature: paymentResponse.razorpay_signature,
@@ -154,7 +196,7 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
       rzp.open();
     } catch (err) {
       console.error(err);
-      alert('Payment initialization failed');
+      toast.error('Payment initialization failed');
     } finally {
       setLoading(false);
     }
@@ -167,18 +209,19 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
     try {
       const response = await axios.post('/builder/register', {
         ...formData,
-        planId: plan?._id,
-        amountPaid: plan?.price,
+        planId: activePlan?._id,
+        amountPaid: activePlan?.price,
       });
 
       if (response.data.success) {
         setStep(4);
+        toast.success("Account registered successfully!");
       } else {
-        alert(response.data.message || 'Something went wrong');
+        toast.error(response.data.message || 'Something went wrong');
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || 'Failed to register');
+      toast.error(err.response?.data?.message || 'Failed to register');
     } finally {
       setLoading(false);
     }
@@ -192,7 +235,7 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        onClick={onClose}
+        onClick={handleClose}
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
       />
       
@@ -203,7 +246,7 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
         className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
       >
         <button 
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-6 right-6 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors z-10"
         >
           <X size={20} />
@@ -218,13 +261,13 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
                </span>
                <span className="text-slate-300 font-bold">•</span>
                <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
-                 {plan?.planName} Plan
+                 {activePlan?.planName} Plan
                </span>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
               {step === 1 && "Let's get started"}
               {step === 2 && "Secure Payment"}
-              {step === 3 && "Final Details"}
+              {step === 3 && (activePlan ? `Finish ${activePlan.planName} Setup` : "Final Details")}
               {step === 4 && "Welcome Aboard!"}
             </h2>
             <p className="text-slate-500 text-sm">
@@ -280,11 +323,11 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
                 <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Payable</p>
-                    <p className="text-2xl font-black text-slate-900">₹{plan?.price}</p>
+                    <p className="text-2xl font-black text-slate-900">₹{activePlan?.price}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Duration</p>
-                    <p className="text-sm font-bold text-slate-600">{plan?.duration}</p>
+                    <p className="text-sm font-bold text-slate-600">{activePlan?.duration}</p>
                   </div>
                 </div>
 
