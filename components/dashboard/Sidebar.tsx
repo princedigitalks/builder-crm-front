@@ -126,8 +126,7 @@ export default function Sidebar() {
         <div>
           <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Communication</p>
           <div className="space-y-1">
-            <SidebarItem icon={MessageSquare} label="WhatsApp Bot" href="/whatsapp" />
-            <SidebarItem icon={FileText} label="Templates" href="/templates" />
+            <SidebarItem icon={MessageSquare} label="WhatsApp Numbers" href="/whatsapp" />
           </div>
         </div>
 

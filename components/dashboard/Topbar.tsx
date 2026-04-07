@@ -81,7 +81,14 @@ export default function Topbar() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phone Number</label>
-                    <input type="text" placeholder="+91 98765 43210" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" />
+                    <input 
+                      type="text" 
+                      maxLength={10}
+                      pattern="\d{10}"
+                      onInput={(e: any) => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)}
+                      placeholder="e.g. 9876543210" 
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" 
+                    />
                   </div>
                 </div>
 

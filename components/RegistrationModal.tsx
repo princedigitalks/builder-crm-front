@@ -79,7 +79,10 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.phone) return;
+    if (!formData.phone || formData.phone.replace(/\D/g, '').length !== 10) {
+      toast.error("Please enter a valid 10-digit phone number.");
+      return;
+    }
     
     setLoading(true);
     try {
@@ -295,10 +298,12 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
                     <input 
                       type="tel" 
                       required
-                      className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-slate-900 font-medium"
-                      placeholder="e.g. +91 98765 43210"
+                      maxLength={10}
+                      pattern="\d{10}"
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-slate-900 font-medium tracking-[0.1em]"
+                      placeholder="e.g. 9876543210"
                       value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})}
                     />
                   </div>
                 </div>
