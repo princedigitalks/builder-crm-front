@@ -14,7 +14,8 @@ import {
   MessageSquare, 
   FileText, 
   Users2, 
-  BarChart3
+  BarChart3,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -66,15 +67,20 @@ export default function Sidebar() {
   const dispatch = useDispatch();
   const router = useRouter();
   const { user, builder } = useSelector((state: RootState) => state.auth);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
     router.push('/');
   };
 
-  const name = user?.fullName || "Raj Mehta";
+  const name = mounted && user?.fullName ? user.fullName : "User";
   const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase();
-  const company = builder?.companyName || "Skyline Infra";
+  const company = mounted && builder?.companyName ? builder.companyName : "Loading...";
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50">
@@ -121,8 +127,7 @@ export default function Sidebar() {
         <div>
           <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Communication</p>
           <div className="space-y-1">
-            <SidebarItem icon={MessageSquare} label="WhatsApp Bot" href="/whatsapp" />
-            <SidebarItem icon={FileText} label="Templates" href="/templates" />
+            <SidebarItem icon={MessageSquare} label="WhatsApp Numbers" href="/whatsapp" />
           </div>
         </div>
 
@@ -131,6 +136,7 @@ export default function Sidebar() {
           <div className="space-y-1">
             <SidebarItem icon={Users2} label="Team" href="/team" />
             <SidebarItem icon={BarChart3} label="Reports" href="/reports" />
+            <SidebarItem icon={CreditCard} label="Billing & Plans" href="/subscriptions" />
           </div>
         </div>
       </nav>

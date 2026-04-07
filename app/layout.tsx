@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 
 import { Providers } from '@/redux/Providers';
 import { Toaster } from 'react-hot-toast';
+import Script from 'next/script';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </Providers>
         <Toaster position="top-center" />
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       </body>
     </html>
   );

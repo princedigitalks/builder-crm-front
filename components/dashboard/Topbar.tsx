@@ -2,6 +2,12 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
+import { 
+  Search, 
+  Plus
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import LeadModal from '@/components/modals/LeadModal';
 
 export default function Topbar() {
   const pathname = usePathname();
@@ -27,17 +33,26 @@ export default function Topbar() {
           <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
             <span className="text-sm font-bold">JD</span>
           </div>
-          <div className="hidden md:block">
-            <p className="text-sm font-bold text-slate-900">John Doe</p>
-            <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Administrator</p>
-          </div>
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-100"
+          >
+            <Plus size={18} />
+            Add Lead
+          </button>
         </div>
-        
-        <button className="relative p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all group">
-          <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white ring-1 ring-rose-500/20 group-hover:scale-110 transition-transform" />
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-        </button>
-      </div>
-    </header>
+      </header>
+
+      {/* Add Lead Modal */}
+      <LeadModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          console.log('Lead created');
+          setIsAddModalOpen(false);
+        }}
+      />
+    </>
   );
 }
