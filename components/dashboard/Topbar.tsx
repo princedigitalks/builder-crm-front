@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { 
   Search, 
@@ -11,6 +11,7 @@ import LeadModal from '@/components/modals/LeadModal';
 
 export default function Topbar() {
   const pathname = usePathname();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const getPageTitle = () => {
     const parts = pathname.split('/');
@@ -20,26 +21,28 @@ export default function Topbar() {
   };
 
   return (
-    <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-10 sticky top-0 z-40">
-      <div>
-        <h2 className="text-xl font-bold text-slate-900 capitalize tracking-tight">{getPageTitle()}</h2>
-        <p className="text-xs text-slate-400 font-medium mt-1">
-          Skyline Infra — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-        </p>
-      </div>
+    <>
+      <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-10 sticky top-0 z-40">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 capitalize tracking-tight">{getPageTitle()}</h2>
+          <p className="text-xs text-slate-400 font-medium mt-1">
+            Skyline Infra — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
 
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-3 pr-6 border-r border-slate-100">
-          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <span className="text-sm font-bold">JD</span>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 pr-6 border-r border-slate-100">
+            <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <span className="text-sm font-bold">JD</span>
+            </div>
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-100"
+            >
+              <Plus size={18} />
+              Add Lead
+            </button>
           </div>
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-100"
-          >
-            <Plus size={18} />
-            Add Lead
-          </button>
         </div>
       </header>
 
