@@ -35,13 +35,7 @@ export default function Topbar() {
             <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
               <span className="text-sm font-bold">JD</span>
             </div>
-            <button 
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-100"
-            >
-              <Plus size={18} />
-              Add Lead
-            </button>
+           
           </div>
         </div>
       </header>

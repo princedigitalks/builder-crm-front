@@ -16,7 +16,7 @@ import {
   Home,
   MessageSquare
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { fetchPlans } from '@/redux/slices/planSlice';
@@ -24,6 +24,7 @@ import { updateBuilder } from '@/redux/slices/authSlice';
 import axios from '@/lib/axios';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import CommonTable from '@/components/ui/CommonTable';
 
 export default function SubscriptionsPage() {
   const dispatch = useDispatch<any>();
@@ -113,6 +114,50 @@ export default function SubscriptionsPage() {
   const activeSub = builder?.subscriptions?.find((s: any) => s.status === 'active');
   const upcomingSubs = builder?.subscriptions?.filter((s: any) => s.status === 'upcoming') || [];
   const historySubs = builder?.subscriptions?.filter((s: any) => s.status !== 'active' && s.status !== 'upcoming') || [];
+
+  const historyColumns = [
+    {
+      header: 'Plan Detail',
+      key: 'planName',
+      render: (sub: any) => (
+        <div>
+          <p className="text-sm font-bold text-slate-900">{sub.planName}</p>
+          <p className="text-[10px] text-slate-400 font-medium">{sub.razorpayPaymentId}</p>
+        </div>
+      )
+    },
+    {
+      header: 'Period',
+      key: 'startDate',
+      render: (sub: any) => (
+        <span className="text-[11px] font-bold text-slate-600">
+           {new Date(sub.startDate).toLocaleDateString()} - {new Date(sub.endDate).toLocaleDateString()}
+        </span>
+      )
+    },
+    {
+      header: 'Amount',
+      key: 'amountPaid',
+      render: (sub: any) => (
+        <span className="text-sm font-black text-slate-900">
+           ₹{sub.amountPaid.toLocaleString()}
+        </span>
+      )
+    },
+    {
+      header: 'Status',
+      key: 'status',
+      className: 'text-right',
+      render: (sub: any) => (
+        <span className={cn(
+          "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
+          sub.status === 'expired' ? "bg-slate-100 text-slate-400 border-slate-200" : "bg-rose-100 text-rose-600 border-rose-200"
+        )}>
+          {sub.status}
+        </span>
+      )
+    }
+  ];
 
   if (!mounted) return (
     <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
@@ -360,50 +405,23 @@ export default function SubscriptionsPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm"
           >
-            <div className="overflow-x-auto">
-               <table className="w-full text-left border-collapse">
-                 <thead>
-                   <tr className="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                     <th className="px-8 py-5">Plan Detail</th>
-                     <th className="px-8 py-5">Period</th>
-                     <th className="px-8 py-5">Amount</th>
-                     <th className="px-8 py-5 text-right">Status</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-slate-50">
-                    {historySubs.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-8 py-16 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                           No subscription history available.
-                        </td>
-                      </tr>
-                    ) : historySubs.map((sub: any) => (
-                      <tr key={sub._id} className="group hover:bg-slate-50/50 transition-colors">
-                        <td className="px-8 py-5">
-                           <p className="text-sm font-bold text-slate-900">{sub.planName}</p>
-                           <p className="text-[10px] text-slate-400 font-medium">{sub.razorpayPaymentId}</p>
-                        </td>
-                        <td className="px-8 py-5 text-[11px] font-bold text-slate-600">
-                           {new Date(sub.startDate).toLocaleDateString()} - {new Date(sub.endDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-8 py-5 text-sm font-black text-slate-900">
-                           ₹{sub.amountPaid.toLocaleString()}
-                        </td>
-                        <td className="px-8 py-5 text-right">
-                           <span className={cn(
-                             "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
-                             sub.status === 'expired' ? "bg-slate-100 text-slate-400 border-slate-200" : "bg-rose-100 text-rose-600 border-rose-200"
-                           )}>
-                             {sub.status}
-                           </span>
-                        </td>
-                      </tr>
-                    ))}
-                 </tbody>
-               </table>
-            </div>
+            <CommonTable 
+              title="Billing History"
+              columns={historyColumns}
+              data={historySubs}
+              loading={false}
+              searchValue=""
+              onSearchChange={() => {}}
+              pagination={{
+                totalItems: historySubs.length,
+                totalPages: 1,
+                currentPage: 1,
+                limit: 100
+              }}
+              onPageChange={() => {}}
+              searchPlaceholder="Search history..."
+            />
           </motion.div>
         )}
       </AnimatePresence>

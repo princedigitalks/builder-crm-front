@@ -19,6 +19,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import PropertyModal from '@/components/modals/PropertyModal';
+import CommonTable from '@/components/ui/CommonTable';
 
 // Premium Mock Data for Properties
 const mockProperties = [
@@ -54,9 +55,6 @@ const mockProperties = [
   },
 ];
 
-const propertyTypes = ['2BHK', '3BHK', '4BHK', 'Office', 'Plot', 'Penthouse', 'Studio'];
-const mockSites = ['Skyline Hub', 'Green Valley Villas', 'Oceanview Heights'];
-
 export default function PropertiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,8 +88,94 @@ export default function PropertiesPage() {
     setIsViewModalOpen(true);
   };
 
+  const filteredProperties = mockProperties.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.site.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const columns = [
+    {
+      header: 'Property',
+      key: 'name',
+      render: (property: any) => (
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
+             <img src={property.image} alt="" className="w-full h-full object-cover" />
+          </div>
+          <div>
+            <span className="font-bold text-slate-900 text-sm tracking-tight block">{property.name}</span>
+            <span className="text-[10px] text-slate-400 font-medium truncate max-w-[150px] block">{property.description}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      header: 'Associated Site',
+      key: 'site',
+      render: (property: any) => (
+        <div className="flex items-center gap-2">
+           <Building size={12} className="text-indigo-400" />
+           <span className="text-xs font-black text-indigo-600">{property.site}</span>
+        </div>
+      )
+    },
+    {
+      header: 'Type',
+      key: 'type',
+      render: (property: any) => (
+        <span className="text-[9px] font-black bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full uppercase tracking-widest border border-slate-200/50">
+          {property.type}
+        </span>
+      )
+    },
+    {
+      header: 'Price',
+      key: 'price',
+      render: (property: any) => (
+        <div className="flex items-center gap-1 font-black text-slate-900">
+           <IndianRupee size={12} className="text-slate-400" />
+           <span className="text-xs">{property.price}</span>
+        </div>
+      )
+    },
+    {
+      header: 'Location',
+      key: 'location',
+      render: (property: any) => (
+        <div className="flex items-center gap-1 text-slate-500">
+           <MapPin size={12} />
+           <span className="text-[10px] font-bold">{property.location}</span>
+        </div>
+      )
+    },
+    {
+      header: 'Actions',
+      key: 'actions',
+      className: 'text-right',
+      render: (property: any) => (
+        <div className="flex items-center justify-end gap-1">
+          <button 
+            onClick={() => handleView(property)}
+            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-hover"
+          >
+            <Eye size={16} />
+          </button>
+          <button 
+            onClick={() => handleEdit(property)}
+            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-white rounded-xl transition-all shadow-hover"
+          >
+            <Edit3 size={16} />
+          </button>
+          <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-all shadow-hover">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-20 px-6 pt-5">
+    <div className=" mx-auto space-y-6 pb-20 px-6 pt-5">
       {/* High-Density Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-6">
         <div>
@@ -103,16 +187,6 @@ export default function PropertiesPage() {
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="relative group">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-slate-900 transition-colors pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search properties..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-slate-300 transition-all w-48 sm:w-64"
-            />
-          </div>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -128,90 +202,22 @@ export default function PropertiesPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden flex flex-col">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  <th className="px-6 py-5">Property</th>
-                  <th className="px-6 py-5">Associated Site</th>
-                  <th className="px-6 py-5">Type</th>
-                  <th className="px-6 py-5">Price</th>
-                  <th className="px-6 py-5">Location</th>
-                  <th className="px-6 py-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                <AnimatePresence>
-                  {mockProperties.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map((property) => (
-                    <motion.tr 
-                      layout
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      key={property.id} 
-                      className="hover:bg-slate-50/50 transition-colors group"
-                    >
-                      <td className="px-6 py-5">
-                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
-                               <img src={property.image} alt="" className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                              <span className="font-bold text-slate-900 text-sm tracking-tight block">{property.name}</span>
-                              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[150px] block">{property.description}</span>
-                            </div>
-                         </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                           <Building size={12} className="text-indigo-400" />
-                           <span className="text-xs font-black text-indigo-600">{property.site}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="text-[9px] font-black bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full uppercase tracking-widest border border-slate-200/50">
-                          {property.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-1 font-black text-slate-900">
-                           <IndianRupee size={12} className="text-slate-400" />
-                           <span className="text-xs">{property.price}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-1 text-slate-500">
-                           <MapPin size={12} />
-                           <span className="text-[10px] font-bold">{property.location}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button 
-                            onClick={() => handleView(property)}
-                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-hover"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button 
-                            onClick={() => handleEdit(property)}
-                            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-white rounded-xl transition-all shadow-hover"
-                          >
-                            <Edit3 size={16} />
-                          </button>
-                          <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-all shadow-hover">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-      </div>
+      <CommonTable 
+        title="Inventory Assets"
+        columns={columns}
+        data={filteredProperties}
+        loading={false}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search properties..."
+        pagination={{
+          totalItems: filteredProperties.length,
+          totalPages: 1,
+          currentPage: 1,
+          limit: 10
+        }}
+        onPageChange={() => {}}
+      />
 
       {/* Add Project Modal */}
       <PropertyModal 

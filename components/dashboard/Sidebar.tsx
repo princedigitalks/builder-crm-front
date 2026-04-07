@@ -100,14 +100,10 @@ export default function Sidebar() {
 
       <nav className="flex-1 p-4 space-y-8 overflow-y-auto custom-scrollbar">
         {/* ... (Sidebar Navigation Items) */}
-        <div>
-          <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Overview</p>
-          <div className="space-y-1">
-            <SidebarItem icon={LayoutDashboard} label="Dashboard" href="/dashboard" />
-            <SidebarItem icon={Activity} label="System Status" href="/status" />
-          </div>
-        </div>
-
+     <div>
+      <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Overview</p>
+       <SidebarItem icon={LayoutDashboard} label="Dashboard" href="/dashboard" />
+     </div>
         <div>
           <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Core</p>
           <div className="space-y-1">
@@ -137,8 +133,12 @@ export default function Sidebar() {
             <SidebarItem icon={Users2} label="Team" href="/team" />
             <SidebarItem icon={BarChart3} label="Reports" href="/reports" />
             <SidebarItem icon={CreditCard} label="Billing & Plans" href="/subscriptions" />
+            <SidebarItem icon={Activity} label="Status" href="/status" />
           </div>
         </div>
+           <div>
+        </div>
+
       </nav>
 
       <div className="p-4 border-t border-slate-100">

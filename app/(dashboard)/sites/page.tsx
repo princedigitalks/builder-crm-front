@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { Building2, Plus, Search, MapPin, MoreVertical, Edit3, Trash2, Eye, LayoutGrid, IndianRupee, Info, Smartphone, User } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import SiteModal from '@/components/modals/SiteModal';
+import CommonTable from '@/components/ui/CommonTable';
 
 // Mock Data for UI demonstration
 const mockWhatsAppNumbers = [
@@ -90,8 +91,119 @@ export default function SitesPage() {
     setIsViewModalOpen(true);
   };
 
+  const filteredSites = mockSites.filter(s => 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.location.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const columns = [
+    {
+      header: 'Project Details',
+      key: 'name',
+      render: (site: any) => (
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100/50">
+             <Building2 size={18} />
+          </div>
+          <div>
+            <span className="font-bold text-slate-900 text-sm tracking-tight block normal-case">{site.name}</span>
+            <span className="text-[10px] text-slate-400 font-medium truncate max-w-[200px] block normal-case">{site.description}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      header: 'Location',
+      key: 'location',
+      render: (site: any) => (
+        <div className="flex items-center gap-1.5 text-slate-600">
+           <MapPin size={12} className="text-slate-400" />
+           <span className="text-xs font-bold leading-none">{site.location}</span>
+        </div>
+      )
+    },
+    {
+      header: 'Property Types',
+      key: 'propertyTypes',
+      render: (site: any) => (
+        <span className="text-xs font-bold text-slate-600">{site.propertyTypes}</span>
+      )
+    },
+    {
+      header: 'Price Range',
+      key: 'priceRange',
+      render: (site: any) => (
+        <span className="text-xs font-bold text-slate-900">{site.priceRange}</span>
+      )
+    },
+    {
+      header: 'Communication',
+      key: 'whatsappNumber',
+      render: (site: any) => (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-indigo-600">
+             <Smartphone size={10} />
+             <span className="text-[10px] font-bold">{site.whatsappNumber.split(' (')[0]}</span>
+          </div>
+          <span className="text-[9px] text-slate-400">+{site.whatsappNumber.split('(')[1].replace(')', '')}</span>
+       </div>
+      )
+    },
+    {
+      header: 'Site Manager',
+      key: 'staff',
+      render: (site: any) => (
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-[10px] font-bold">
+             {site.staff.charAt(0)}
+          </div>
+          <span className="text-slate-700 text-xs font-bold">{site.staff}</span>
+       </div>
+      )
+    },
+    {
+      header: 'Status',
+      key: 'status',
+      render: (site: any) => (
+        <span className={cn(
+          "inline-flex items-center gap-1.5 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border",
+          site.status === 'Active' 
+            ? "bg-emerald-50 text-emerald-600 border-emerald-100" 
+            : "bg-amber-50 text-amber-600 border-amber-100"
+        )}>
+          <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", site.status === 'Active' ? "bg-emerald-500" : "bg-amber-500")} />
+          {site.status}
+        </span>
+      )
+    },
+    {
+      header: 'Actions',
+      key: 'actions',
+      className: 'text-right',
+      render: (site: any) => (
+        <div className="flex items-center justify-end gap-1">
+          <button 
+            onClick={() => handleView(site)}
+            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-hover"
+          >
+            <Eye size={16} />
+          </button>
+          <button 
+            onClick={() => handleEdit(site)}
+            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-white rounded-xl transition-all shadow-hover"
+          >
+            <Edit3 size={16} />
+          </button>
+          <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-all shadow-hover">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-20 px-6 pt-5">
+    <div className=" mx-auto space-y-6 pb-20 px-6 pt-5">
       {/* High-Density Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-6">
         <div>
@@ -103,16 +215,6 @@ export default function SitesPage() {
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="relative group">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-slate-900 transition-colors pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search projects..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-slate-300 transition-all w-48 sm:w-64"
-            />
-          </div>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -128,103 +230,22 @@ export default function SitesPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden flex flex-col">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  <th className="px-6 py-5">Project Details</th>
-                  <th className="px-6 py-5">Location</th>
-                  <th className="px-6 py-5">Property Types</th>
-                  <th className="px-6 py-5">Price Range</th>
-                  <th className="px-6 py-5">Communication</th>
-                  <th className="px-6 py-5">Site Manager</th>
-                  <th className="px-6 py-5">Status</th>
-                  <th className="px-6 py-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                <AnimatePresence>
-                  {mockSites.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map((site) => (
-                    <motion.tr 
-                      layout
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      key={site.id} 
-                      className="hover:bg-slate-50/50 transition-colors group text-[10px] uppercase font-black"
-                    >
-                      <td className="px-6 py-5">
-                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100/50">
-                               <Building2 size={18} />
-                            </div>
-                            <div>
-                              <span className="font-bold text-slate-900 text-sm tracking-tight block normal-case">{site.name}</span>
-                              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[200px] block normal-case">{site.description}</span>
-                            </div>
-                         </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-1.5 text-slate-600">
-                           <MapPin size={12} className="text-slate-400" />
-                           <span className="text-xs font-bold leading-none">{site.location}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                         <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1.5 text-indigo-600">
-                               <Smartphone size={10} />
-                               <span>{site.whatsappNumber.split(' (')[0]}</span>
-                            </div>
-                            <span className="text-[9px] text-slate-400">+{site.whatsappNumber.split('(')[1].replace(')', '')}</span>
-                         </div>
-                      </td>
-                      <td className="px-6 py-5">
-                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-[10px]">
-                               {site.staff.charAt(0)}
-                            </div>
-                            <span className="text-slate-700">{site.staff}</span>
-                         </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className={cn(
-                          "inline-flex items-center gap-1.5 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border",
-                          site.status === 'Active' 
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100" 
-                            : "bg-amber-50 text-amber-600 border-amber-100"
-                        )}>
-                          <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", site.status === 'Active' ? "bg-emerald-500" : "bg-amber-500")} />
-                          {site.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button 
-                            onClick={() => handleView(site)}
-                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-hover"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button 
-                            onClick={() => handleEdit(site)}
-                            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-white rounded-xl transition-all shadow-hover"
-                          >
-                            <Edit3 size={16} />
-                          </button>
-                          <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-all shadow-hover">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-      </div>
+      <CommonTable 
+        title="Project Portfolio"
+        columns={columns}
+        data={filteredSites}
+        loading={false}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search projects..."
+        pagination={{
+          totalItems: filteredSites.length,
+          totalPages: 1,
+          currentPage: 1,
+          limit: 10
+        }}
+        onPageChange={() => {}}
+      />
 
       {/* New/Edit Site Modal */}
       <SiteModal 

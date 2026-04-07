@@ -18,7 +18,9 @@ import {
   IndianRupee,
   Star,
   ArrowUpRight,
-  Briefcase
+  Briefcase,
+  LayoutGridIcon,
+  List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TeamModal from '@/components/modals/TeamModal';
@@ -155,7 +157,7 @@ const MemberCard = ({ member }: { member: typeof TEAM_MEMBERS[0] }) => (
 
 export default function TeamPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -281,7 +283,7 @@ export default function TeamPage() {
                 viewMode === 'grid' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
               )}
             >
-              <LayoutGrid size={18} />
+              <LayoutGridIcon size={18} />
             </button>
             <button 
               onClick={() => setViewMode('table')}
@@ -294,16 +296,6 @@ export default function TeamPage() {
             </button>
           </div>
 
-          <div className="relative hidden lg:block">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search members..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all w-72 shadow-sm"
-            />
-          </div>
           <button 
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl text-sm font-black transition-all shadow-xl shadow-indigo-200 uppercase tracking-widest"
