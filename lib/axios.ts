@@ -9,7 +9,12 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    // We could add auth headers here if needed (e.g. from localStorage)
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('builder_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
     return config;
   },
   (error) => {

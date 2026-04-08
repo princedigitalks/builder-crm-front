@@ -1,96 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, 
   UserPlus, 
-  Search, 
-  Filter, 
   MoreVertical, 
   Mail, 
   Phone, 
-  Building, 
   Shield, 
   TrendingUp, 
-  CheckCircle2, 
-  X,
   IndianRupee,
   Star,
   ArrowUpRight,
-  Briefcase,
+  Building,
   LayoutGridIcon,
   List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import StaffModal from '@/components/modals/StaffModal';
+import StaffPasswordModal from '@/components/modals/StaffPasswordModal';
 import CommonTable from '@/components/ui/CommonTable';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/store';
+import { fetchStaff, addStaff, updateStaff, deleteStaff } from '@/redux/slices/staffSlice';
+import { toast } from 'react-hot-toast';
+import { Edit2, Trash2, Key } from 'lucide-react';
 
-const STAFF_MEMBERS = [
-  {
-    id: 1,
-    name: 'Kavya Reddy',
-    role: 'Senior Sales Manager',
-    email: 'kavya@skylineinfra.com',
-    phone: '+91 98765 43210',
-    sites: ['Skyline Heights', 'Skyline Grand'],
-    performance: 92,
-    dealsClosed: 14,
-    status: 'online',
-    image: null
-  },
-  {
-    id: 2,
-    name: 'Nikhil Mehta',
-    role: 'Sales Executive',
-    email: 'nikhil@skylineinfra.com',
-    phone: '+91 98765 43211',
-    sites: ['Skyline Heights'],
-    performance: 78,
-    dealsClosed: 8,
-    status: 'offline',
-    image: null
-  },
-  {
-    id: 3,
-    name: 'Sneha Rao',
-    role: 'Relationship Manager',
-    email: 'sneha@skylineinfra.com',
-    phone: '+91 98765 43212',
-    sites: ['Ocean View Residency'],
-    performance: 85,
-    dealsClosed: 11,
-    status: 'online',
-    image: null
-  },
-  {
-    id: 4,
-    name: 'Rahul Sharma',
-    role: 'Sales Lead',
-    email: 'rahul@skylineinfra.com',
-    phone: '+91 98765 43213',
-    sites: ['Skyline Grand', 'Ocean View'],
-    performance: 95,
-    dealsClosed: 22,
-    status: 'away',
-    image: null
-  }
-];
-
-const PerformanceBadge = ({ score }: { score: number }) => {
-  const color = score >= 90 ? 'text-emerald-600 bg-emerald-50 border-emerald-100' :
-                score >= 80 ? 'text-indigo-600 bg-indigo-50 border-indigo-100' :
-                'text-amber-600 bg-amber-50 border-amber-100';
-  
-  return (
-    <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-[10px] uppercase tracking-wider", color)}>
-      <TrendingUp size={12} />
-      {score}% Performance
-    </div>
-  );
-};
-
-const MemberCard = ({ member }: { member: typeof STAFF_MEMBERS[0] }) => (
+const MemberCard = ({ member, onEdit, onDelete, onChangePassword, onStatusChange }: { member: any, onEdit: (m: any) => void, onDelete: (id: string) => void, onChangePassword: (m: any) => void, onStatusChange: (id: string, currentStatus: string) => void }) => (
   <motion.div 
     whileHover={{ y: -4 }}
     className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 p-6 flex flex-col gap-6 relative overflow-hidden group"
@@ -99,79 +36,204 @@ const MemberCard = ({ member }: { member: typeof STAFF_MEMBERS[0] }) => (
       <div className="flex items-center gap-4">
         <div className="relative">
           <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-xl border border-slate-200 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-all duration-300 shadow-sm">
-            {member.name.split(' ').map(n => n[0]).join('')}
+            {member.userId.fullName.split(' ').map((n: string) => n[0]).join('')}
           </div>
           <div className={cn(
             "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm",
-            member.status === 'online' ? "bg-emerald-500" :
-            member.status === 'away' ? "bg-amber-500" : "bg-slate-300"
+            member.userId.status === 'active' ? "bg-emerald-500" : "bg-slate-300"
           )} />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-slate-900 leading-tight">{member.name}</h3>
-          <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mt-1 flex items-center gap-1.5">
+          <h3 className="text-lg font-bold text-slate-900 leading-tight">{member.userId.fullName}</h3>
+          <p className="text-xs font-bold text-indigo-600 mt-1 flex items-center gap-1.5">
             <Shield size={12} />
-            {member.role}
+            {member.staffRole}
           </p>
         </div>
       </div>
-      <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all">
-        <MoreVertical size={18} />
-      </button>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button 
+          onClick={() => onChangePassword(member)}
+          className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+          title="Change Password"
+        >
+          <Key size={16} />
+        </button>
+        <button 
+          onClick={() => onEdit(member)}
+          className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+          title="Edit"
+        >
+          <Edit2 size={16} />
+        </button>
+        <button 
+          onClick={() => onDelete(member._id)}
+          className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+          title="Delete"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
 
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Mail size={14} className="text-slate-400" />
-        {member.email}
+    <div className="space-y-3 font-semibold">
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-bold overflow-hidden">
+        <Mail size={14} className="text-slate-400 shrink-0" />
+        <span className="truncate">{member.userId.email}</span>
       </div>
-      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Phone size={14} className="text-slate-400" />
-        {member.phone}
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-bold">
+        <Phone size={14} className="text-slate-400 shrink-0" />
+        {member.userId.phone}
       </div>
-      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Building size={14} className="text-slate-400" />
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-bold">
+        <Building size={14} className="text-slate-400 shrink-0" />
         <div className="flex flex-wrap gap-1">
-          {member.sites.map((site, i) => (
-            <span key={i} className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-md text-[10px] text-slate-600 font-bold">
-              {site}
+           <span className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-md text-[10px] text-slate-600 font-bold">
+              All Sites
             </span>
-          ))}
         </div>
       </div>
     </div>
 
     <div className="pt-4 mt-auto border-t border-slate-50 flex items-center justify-between">
       <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Deals Closed</p>
-        <p className="text-lg font-bold text-slate-900">{member.dealsClosed}</p>
+        <p className="text-[10px] font-bold text-slate-400 mb-1">Account Status</p>
+        <div className="flex items-center gap-2">
+           <span className={cn(
+             "text-xs font-black",
+             member.userId.status === 'active' ? "text-emerald-600" : "text-slate-400"
+           )}>
+             {member.userId.status === 'active' ? 'Active' : 'Inactive'}
+           </span>
+        </div>
       </div>
-      <PerformanceBadge score={member.performance} />
-    </div>
-
-    <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-       <ArrowUpRight size={20} className="text-slate-200" />
+      
+      <button 
+        onClick={() => onStatusChange(member._id, member.userId.status)}
+        className={cn(
+          "relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none",
+          member.userId.status === 'active' ? "bg-emerald-500" : "bg-slate-200"
+        )}
+      >
+        <div className={cn(
+          "absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-200",
+          member.userId.status === 'active' ? "translate-x-5" : "translate-x-0"
+        )} />
+      </button>
     </div>
   </motion.div>
 );
 
 export default function StaffPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { staffList, loading, pagination } = useSelector((state: RootState) => state.staff);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<any>(null);
+  const [passwordStaff, setPasswordStaff] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const currentLimit = 6;
 
-  const filteredMembers = STAFF_MEMBERS.filter(m => 
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Debouncing logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to page 1 on search
+    }, 500);
 
-  const ITEMS_PER_PAGE = 6;
-  const paginatedMembers = filteredMembers.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    dispatch(fetchStaff({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+  }, [dispatch, currentPage, debouncedSearch]);
+
+  const handleAddStaff = async (data: any) => {
+    try {
+      if (editingStaff) {
+        const resultAction = await dispatch(updateStaff({ id: editingStaff._id, data }));
+        if (updateStaff.fulfilled.match(resultAction)) {
+          toast.success("Staff member updated successfully!");
+          setIsAddModalOpen(false);
+          setEditingStaff(null);
+          dispatch(fetchStaff({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+        } else {
+          toast.error(resultAction.payload as string || "Failed to update staff member");
+        }
+        return;
+      }
+
+      const resultAction = await dispatch(addStaff(data));
+      if (addStaff.fulfilled.match(resultAction)) {
+        toast.success("Staff member added successfully!");
+        setIsAddModalOpen(false);
+        dispatch(fetchStaff({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+      } else {
+        toast.error(resultAction.payload as string || "Failed to add staff member");
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+  const handleEdit = (member: any) => {
+    setEditingStaff(member);
+    setIsAddModalOpen(true);
+  };
+
+  const handlePasswordChangeRequest = (member: any) => {
+    setPasswordStaff(member);
+    setIsPasswordModalOpen(true);
+  };
+
+  const handlePasswordUpdate = async (password: string) => {
+    try {
+      const resultAction = await dispatch(updateStaff({ id: passwordStaff._id, data: { password } }));
+      if (updateStaff.fulfilled.match(resultAction)) {
+        toast.success("Password updated successfully!");
+        setIsPasswordModalOpen(false);
+        setPasswordStaff(null);
+      } else {
+        toast.error(resultAction.payload as string || "Failed to update password");
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+  const handleStatusToggle = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    try {
+      const resultAction = await dispatch(updateStaff({ id, data: { status: newStatus } }));
+      if (updateStaff.fulfilled.match(resultAction)) {
+        toast.success(`Staff member ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`);
+        dispatch(fetchStaff({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+      } else {
+        toast.error(resultAction.payload as string || "Failed to update status");
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this staff member?")) {
+      try {
+        const resultAction = await dispatch(deleteStaff(id));
+        if (deleteStaff.fulfilled.match(resultAction)) {
+          toast.success("Staff member deleted successfully!");
+          dispatch(fetchStaff({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+        } else {
+          toast.error(resultAction.payload as string || "Failed to delete staff member");
+        }
+      } catch (err) {
+        toast.error("An unexpected error occurred");
+      }
+    }
+  };
 
   const columns = [
     {
@@ -179,32 +241,22 @@ export default function StaffPage() {
       key: 'name',
       render: (item: any) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-[10px] border border-slate-200 uppercase">
-            {item.name.split(' ').map((n: string) => n[0]).join('')}
+          <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-[10px] border border-slate-200">
+            {item.userId.fullName.split(' ').map((n: string) => n[0]).join('')}
           </div>
           <div>
-            <div className="text-sm font-medium text-slate-900 tracking-tight">{item.name}</div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.email}</div>
+            <div className="text-sm font-medium text-slate-900 tracking-tight">{item.userId.fullName}</div>
+            <div className="text-[10px] font-bold text-slate-400">{item.userId.email}</div>
           </div>
         </div>
       )
     },
     {
-      header: 'Role & Status',
+      header: 'Staff Role',
       key: 'role',
       render: (item: any) => (
-        <div className="space-y-1">
-          <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
-            <Shield size={10} /> {item.role}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className={cn(
-              "w-1.5 h-1.5 rounded-full",
-              item.status === 'online' ? "bg-emerald-500" :
-              item.status === 'away' ? "bg-amber-500" : "bg-slate-300"
-            )} />
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.status}</span>
-          </div>
+        <div className="text-[10px] font-black text-indigo-600 flex items-center gap-1.5">
+          <Shield size={10} /> {item.staffRole}
         </div>
       )
     },
@@ -213,38 +265,39 @@ export default function StaffPage() {
       key: 'phone',
       render: (item: any) => (
         <div className="text-[11px] font-black text-slate-600 tracking-widest">
-          {item.phone}
+          {item.userId.phone}
         </div>
       )
     },
     {
-      header: 'Assigned Sites',
-      key: 'sites',
+      header: 'Status',
+      key: 'status',
       render: (item: any) => (
-        <div className="flex flex-wrap gap-1">
-          {item.sites.map((site: string, i: number) => (
-            <span key={i} className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-md text-[9px] text-slate-500 font-black uppercase tracking-tighter">
-              {site}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <div className={cn(
+              "w-1.5 h-1.5 rounded-full",
+              item.userId.status === 'active' ? "bg-emerald-500" : "bg-slate-300"
+            )} />
+            <span className={cn(
+              "text-[9px] font-bold",
+              item.userId.status === 'active' ? "text-emerald-600" : "text-slate-400"
+            )}>
+              {item.userId.status === 'active' ? 'Active' : 'Inactive'}
             </span>
-          ))}
-        </div>
-      )
-    },
-    {
-      header: 'Performance',
-      key: 'performance',
-      render: (item: any) => (
-        <div className="flex flex-col gap-1.5 min-w-[100px]">
-          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
-            <span className="text-slate-400">Score</span>
-            <span className="text-indigo-600">{item.performance}%</span>
           </div>
-          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-indigo-600 rounded-full" 
-              style={{ width: `${item.performance}%` }} 
-            />
-          </div>
+          <button 
+            onClick={() => handleStatusToggle(item._id, item.userId.status)}
+            className={cn(
+              "relative w-9 h-5 rounded-full transition-colors duration-200 focus:outline-none",
+              item.userId.status === 'active' ? "bg-emerald-500" : "bg-slate-200"
+            )}
+          >
+            <div className={cn(
+              "absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200",
+              item.userId.status === 'active' ? "translate-x-4" : "translate-x-0"
+            )} />
+          </button>
         </div>
       )
     },
@@ -252,10 +305,30 @@ export default function StaffPage() {
       header: 'Actions',
       key: 'actions',
       className: 'text-right',
-      render: () => (
-        <button className="p-2 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all">
-          <MoreVertical size={16} />
-        </button>
+      render: (item: any) => (
+        <div className="flex items-center justify-end gap-2">
+          <button 
+            onClick={() => handlePasswordChangeRequest(item)}
+            className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
+            title="Change Password"
+          >
+            <Key size={16} />
+          </button>
+          <button 
+            onClick={() => handleEdit(item)}
+            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+            title="Edit"
+          >
+            <Edit2 size={16} />
+          </button>
+          <button 
+            onClick={() => handleDelete(item._id)}
+            className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       )
     }
   ];
@@ -271,7 +344,7 @@ export default function StaffPage() {
             </div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Staff Management</h1>
           </div>
-          <p className="text-slate-500 font-medium">Manage user roles, site-wise assignments and track performance.</p>
+          <p className="text-slate-500 font-semibold">Manage user roles, site-wise assignments and track performance.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -298,7 +371,7 @@ export default function StaffPage() {
 
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl text-sm font-black transition-all shadow-xl shadow-indigo-200 uppercase tracking-widest"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl text-sm font-black transition-all shadow-xl shadow-indigo-200 active:scale-95"
           >
             <UserPlus size={20} />
             Add Staff
@@ -306,25 +379,6 @@ export default function StaffPage() {
         </div>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Staff', value: `${STAFF_MEMBERS.length} Members`, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-          { label: 'Avg Performance', value: '86%', icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { label: 'Active Sites', value: '12 Projects', icon: Building, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Revenue Generated', value: '₹14.2Cr', icon: IndianRupee, color: 'text-blue-600', bg: 'bg-blue-50' },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all">
-            <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-              <stat.icon size={24} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-              <p className="text-xl font-black text-slate-900 mt-0.5">{stat.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* Content View Toggle */}
       <AnimatePresence mode="wait">
@@ -336,8 +390,15 @@ export default function StaffPage() {
             exit={{ opacity: 0, y: -20 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10"
           >
-            {paginatedMembers.map(member => (
-              <MemberCard key={member.id} member={member} />
+            {staffList.map((member: any) => (
+              <MemberCard 
+                key={member._id} 
+                member={member} 
+                onEdit={handleEdit} 
+                onDelete={handleDelete} 
+                onChangePassword={handlePasswordChangeRequest}
+                onStatusChange={handleStatusToggle}
+              />
             ))}
             
             <button 
@@ -347,7 +408,7 @@ export default function StaffPage() {
               <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-indigo-600 transition-all shadow-sm mb-4">
                 <UserPlus size={32} />
               </div>
-              <p className="text-lg font-black text-slate-400 group-hover:text-indigo-600 transition-all uppercase tracking-tight">Add New Staff</p>
+              <p className="text-lg font-black text-slate-400 group-hover:text-indigo-600 transition-all">Add New Staff</p>
               <p className="text-xs font-bold text-slate-400 mt-1 text-center">Onboard a new sales executive or manager to your staff.</p>
             </button>
           </motion.div>
@@ -361,16 +422,16 @@ export default function StaffPage() {
             <CommonTable 
               title="Staff Directory"
               columns={columns}
-              data={paginatedMembers}
-              loading={false}
+              data={staffList}
+              loading={loading}
               searchValue={searchTerm}
               onSearchChange={setSearchTerm}
               onPageChange={setCurrentPage}
               pagination={{
-                totalItems: filteredMembers.length,
-                totalPages: Math.ceil(filteredMembers.length / ITEMS_PER_PAGE),
+                totalItems: pagination.totalRecords,
+                totalPages: pagination.totalPages,
                 currentPage: currentPage,
-                limit: ITEMS_PER_PAGE
+                limit: currentLimit
               }}
               searchPlaceholder="Filter workforce..."
             />
@@ -381,11 +442,24 @@ export default function StaffPage() {
       {/* Add Member Modal */}
       <StaffModal 
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={(e) => {
-          e.preventDefault();
+        onClose={() => {
           setIsAddModalOpen(false);
+          setEditingStaff(null);
         }}
+        onSubmit={handleAddStaff}
+        loading={loading}
+        initialData={editingStaff}
+      />
+
+      <StaffPasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => {
+          setIsPasswordModalOpen(false);
+          setPasswordStaff(null);
+        }}
+        onSubmit={handlePasswordUpdate}
+        loading={loading}
+        staffName={passwordStaff?.userId?.fullName}
       />
     </div>
   );

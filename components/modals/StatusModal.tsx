@@ -1,110 +1,74 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, Reorder } from 'framer-motion';
-import { GripVertical, Plus, Trash2, CheckCircle2, Info } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from 'react';
+import CommonDialog from '@/components/ui/CommonDialog';
+import { Settings2, CheckCircle2, Palette } from 'lucide-react';
 
-interface Status {
-  id: string;
-  label: string;
-  color: string;
+interface StatusModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (e: React.FormEvent) => void;
+  formData: any;
+  setFormData: (data: any) => void;
 }
 
-const INITIAL_STAGES: Status[] = [
-  { id: 'New', label: 'New Lead', color: 'bg-indigo-500' },
-  { id: 'Contacted', label: 'Contacted', color: 'bg-blue-500' },
-  { id: 'Interested', label: 'Interested', color: 'bg-cyan-500' },
-  { id: 'Site Visit', label: 'Site Visit', color: 'bg-emerald-500' },
-  { id: 'Negotiation', label: 'Negotiation', color: 'bg-amber-500' },
-  { id: 'Closed Won', label: 'Closed Won', color: 'bg-green-600' },
-];
-
-export default function StatusPage() {
-  const [stages, setStages] = useState<Status[]>(INITIAL_STAGES);
-
+export default function StatusModal({ 
+  isOpen, 
+  onClose, 
+  onSubmit,
+  formData,
+  setFormData
+}: StatusModalProps) {
   return (
-    <div className="space-y-8 mx-auto pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-6">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-2">Status</h1>
-          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">
-            Lead Kanban Stage Order
-          </p>
-        </div>
-        <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-200 active:scale-95">
-          <Plus size={16} strokeWidth={4} />
-          Add Status
-        </button>
-      </div>
+    <CommonDialog isOpen={isOpen} onClose={onClose} title={formData._id ? "Edit Status" : "Add Status"} maxWidth="max-w-xl">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 font-black tracking-tight uppercase">
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Status Name</label>
+            <div className="relative group">
+              <Settings2 size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <input 
+                required
+                type="text" 
+                placeholder="e.g. Contacted" 
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-400 transition-all font-black uppercase placeholder:text-slate-300" 
+              />
+            </div>
+          </div>
 
-      <div className="bg-white border border-slate-100 rounded-[2rem] shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Pipeline Statuses</h3>
-          <div className="flex items-center gap-2 text-[9px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100/50">
-            <Info size={10} />
-            Drag to reorder
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Status Color</label>
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
+              <input 
+                type="color" 
+                value={formData.color}
+                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                className="w-12 h-8 cursor-pointer border-none bg-transparent"
+              />
+              <span className="text-[10px] font-black text-slate-500">{formData.color.toUpperCase()}</span>
+            </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">
-                <th className="px-6 py-4">Status Name</th>
-                <th className="px-6 py-4">Order</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <Reorder.Group
-              as="tbody"
-              axis="y"
-              values={stages}
-              onReorder={setStages}
-              className="divide-y divide-slate-50"
-            >
-              {stages.map((stage) => (
-                <Reorder.Item
-                  key={stage.id}
-                  value={stage}
-                  as="tr"
-                  className="hover:bg-slate-50/50 transition-colors group bg-white"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="p-1 text-slate-300 group-hover:text-indigo-400 cursor-grab active:cursor-grabbing transition-colors">
-                        <GripVertical size={18} />
-                      </div>
-                      <div className={cn("w-3 h-3 rounded-full shadow-sm shrink-0", stage.color)} />
-                      <span className="text-sm font-black text-slate-900 uppercase tracking-tight">{stage.label}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs font-black text-slate-600 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg">
-                      {stages.indexOf(stage) + 1}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100">
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </Reorder.Item>
-              ))}
-            </Reorder.Group>
-          </table>
-        </div>
-
-        <div className="p-6 bg-slate-50/30 border-t border-slate-50 flex justify-end gap-3">
-          <button className="px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
-            Reset Defaults
+        <div className="flex gap-3 pt-3">
+          <button 
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl font-black transition-all active:scale-95 text-[10px] tracking-widest uppercase"
+          >
+            Cancel
           </button>
-          <button className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-2">
+          <button 
+            type="submit"
+            className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black transition-all shadow-lg shadow-indigo-100 active:scale-95 flex items-center justify-center gap-2 text-[10px] tracking-widest uppercase"
+          >
             <CheckCircle2 size={16} />
-            Save
+            {formData._id ? 'Update Status' : 'Add Status'}
           </button>
         </div>
-      </div>
-    </div>
+      </form>
+    </CommonDialog>
   );
 }

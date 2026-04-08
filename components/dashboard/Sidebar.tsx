@@ -59,9 +59,10 @@ const SidebarItem = ({
 
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { logout } from '@/redux/slices/authSlice';
+import { logout, updateBuilder } from '@/redux/slices/authSlice';
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
+import axios from '@/lib/axios';
 
 export default function Sidebar() {
   const dispatch = useDispatch();
@@ -72,6 +73,26 @@ export default function Sidebar() {
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      // Only fetch if we are missing the critical company information 
+      // AND we have a user session. This prevents unnecessary API calls.
+      const isMissingData = !builder || !builder.companyName;
+      
+      if (mounted && user?._id && isMissingData) {
+        try {
+          const response = await axios.get(`/builder/profile/${user._id}`);
+          if (response.data.success && response.data.data.builder) {
+            dispatch(updateBuilder(response.data.data.builder));
+          }
+        } catch (err) {
+          console.error("Failed to fetch builder profile", err);
+        }
+      }
+    };
+    fetchProfile();
+  }, [mounted, user?._id, builder?.companyName, dispatch]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -99,11 +120,13 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-8 overflow-y-auto custom-scrollbar">
-        {/* ... (Sidebar Navigation Items) */}
-     <div>
-      <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Overview</p>
-       <SidebarItem icon={LayoutDashboard} label="Dashboard" href="/dashboard" />
-     </div>
+        {mounted && user?.role && user.role !== 'STAFF' && (
+          <div>
+            <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Overview</p>
+            <SidebarItem icon={LayoutDashboard} label="Dashboard" href="/dashboard" />
+          </div>
+        )}
+
         <div>
           <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Core</p>
           <div className="space-y-1">
@@ -112,43 +135,51 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <div>
-          <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Projects</p>
-          <div className="space-y-1">
-            <SidebarItem icon={Building2} label="Sites" href="/sites" />
-          </div>
-        </div>
+        {mounted && user?.role && (user.role === 'BUILDER' || user.role === 'ADMIN') && (
+          <>
+            <div>
+              <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Projects</p>
+              <div className="space-y-1">
+                <SidebarItem icon={Building2} label="Sites" href="/sites" />
+              </div>
+            </div>
 
-        <div>
-          <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Communication</p>
-          <div className="space-y-1">
-            <SidebarItem icon={MessageSquare} label="WhatsApp Numbers" href="/whatsapp" />
-          </div>
-        </div>
+            <div>
+              <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Communication</p>
+              <div className="space-y-1">
+                <SidebarItem icon={MessageSquare} label="WhatsApp Numbers" href="/whatsapp" />
+              </div>
+            </div>
 
-        <div>
-          <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Admin</p>
-          <div className="space-y-1">
-            <SidebarItem icon={Users2} label="Staff" href="/staff" />
-            <SidebarItem icon={GitMerge} label="Teams" href="/team" />
-            <SidebarItem icon={BarChart3} label="Reports" href="/reports" />
-            <SidebarItem icon={CreditCard} label="Billing & Plans" href="/subscriptions" />
-            <SidebarItem icon={Activity} label="Status" href="/status" />
-          </div>
-        </div>
-           <div>
-        </div>
-
+            <div>
+              <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Admin</p>
+              <div className="space-y-1">
+                <SidebarItem icon={Users2} label="Staff" href="/staff" />
+                <SidebarItem icon={GitMerge} label="Teams" href="/team" />
+                <SidebarItem icon={BarChart3} label="Reports" href="/reports" />
+                <SidebarItem icon={CreditCard} label="Billing & Plans" href="/subscriptions" />
+                <SidebarItem icon={Activity} label="Status" href="/status" />
+              </div>
+            </div>
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t border-slate-100">
         <div className="flex items-center gap-3 p-2 rounded-xl group relative">
           <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm">
-            {initials}
+            {mounted ? initials : "U"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-slate-900 truncate">{name}</p>
-            <p className="text-[10px] font-medium text-slate-500 truncate">Admin · {company}</p>
+            <p className="text-sm font-bold text-slate-900 truncate">
+              {mounted ? name : "User"}
+            </p>
+            <p className="text-[10px] font-medium text-slate-500 truncate">
+              {mounted 
+                ? `${user?.role === 'STAFF' ? 'Staff' : 'Builder'} · ${company}`
+                : "Builder · Loading..."
+              }
+            </p>
           </div>
           <button 
             onClick={handleLogout}

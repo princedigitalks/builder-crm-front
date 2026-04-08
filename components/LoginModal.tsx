@@ -40,7 +40,12 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           builder: response.data.data.builder,
           token: response.data.token
         }));
-        router.push('/dashboard');
+        
+        if (response.data.data.user.role === 'STAFF') {
+          router.push('/leads');
+        } else {
+          router.push('/dashboard');
+        }
         onClose();
         toast.success("Welcome back!");
       }
@@ -81,7 +86,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             BF
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-          <p className="text-slate-500 text-sm font-medium">Only Builder accounts authorized</p>
+          <p className="text-slate-500 text-sm font-medium">Please sign in to your workspace</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
