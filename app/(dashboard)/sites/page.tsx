@@ -132,12 +132,12 @@ export default function SitesPage() {
       header: 'Project Details',
       key: 'name',
       render: (site: any) => (
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100/50">
-             <Building2 size={18} />
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50">
+             <Building2 size={14} />
           </div>
           <div>
-            <span className="font-bold text-slate-900 text-sm tracking-tight block normal-case">{site.name}</span>
+            <span className="font-semibold text-slate-900 text-xs tracking-tight block normal-case">{site.name}</span>
             <span className="text-[10px] text-slate-400 font-medium truncate max-w-[200px] block normal-case">{site.description}</span>
           </div>
         </div>
@@ -147,10 +147,10 @@ export default function SitesPage() {
       header: 'Location',
       key: 'city',
       render: (site: any) => (
-        <div className="flex flex-col gap-1 text-slate-600">
+        <div className="flex flex-col gap-0.5 text-slate-600">
            <div className="flex items-center gap-1.5">
-              <MapPin size={12} className="text-indigo-500" />
-              <span className="text-xs font-black uppercase tracking-tight">{site.city}</span>
+              <MapPin size={10} className="text-indigo-500" />
+              <span className="text-[11px] font-semibold uppercase tracking-tight">{site.city}</span>
            </div>
            <span className="text-[10px] font-medium text-slate-400 truncate max-w-[150px]">{site.area}</span>
         </div>
@@ -160,24 +160,24 @@ export default function SitesPage() {
       header: 'Property Types',
       key: 'propertyTypes',
       render: (site: any) => (
-        <span className="text-xs font-bold text-slate-600">{site.propertyTypes}</span>
+        <span className="text-xs font-medium text-slate-600">{site.propertyTypes}</span>
       )
     },
     {
       header: 'Price Range',
       key: 'priceRange',
       render: (site: any) => (
-        <span className="text-xs font-bold text-slate-900">{site.priceRange}</span>
+        <span className="text-xs font-semibold text-slate-900">{site.priceRange}</span>
       )
     },
     {
       header: 'Communication',
       key: 'whatsappNumber',
       render: (site: any) => (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5 text-indigo-600">
              <Smartphone size={10} />
-             <span className="text-[10px] font-bold">{site.whatsappNumber.split(' (')[0]}</span>
+             <span className="text-[10px] font-semibold">{site.whatsappNumber.split(' (')[0]}</span>
           </div>
           <span className="text-[9px] text-slate-400">+{site.whatsappNumber.split('(')[1].replace(')', '')}</span>
        </div>
@@ -191,9 +191,9 @@ export default function SitesPage() {
         return (
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-               <GitMerge size={12} />
+               <GitMerge size={10} />
             </div>
-            <span className="text-slate-700 text-xs font-bold">{team?.name || 'Unassigned'}</span>
+            <span className="text-slate-700 text-xs font-medium">{team?.name || 'Unassigned'}</span>
          </div>
         );
       }
@@ -203,12 +203,12 @@ export default function SitesPage() {
       key: 'status',
       render: (site: any) => (
         <span className={cn(
-          "inline-flex items-center gap-1.5 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border",
+          "inline-flex items-center gap-1.5 text-[9px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider border",
           site.status === 'Active' 
             ? "bg-emerald-50 text-emerald-600 border-emerald-100" 
             : "bg-amber-50 text-amber-600 border-amber-100"
         )}>
-          <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", site.status === 'Active' ? "bg-emerald-500" : "bg-amber-500")} />
+          <span className={cn("w-1 h-1 rounded-full animate-pulse", site.status === 'Active' ? "bg-emerald-500" : "bg-amber-500")} />
           {site.status}
         </span>
       )
@@ -221,18 +221,18 @@ export default function SitesPage() {
         <div className="flex items-center justify-end gap-1">
           <button 
             onClick={() => handleView(site)}
-            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-hover"
+            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
           >
-            <Eye size={16} />
+            <Eye size={14} />
           </button>
           <button 
             onClick={() => handleEdit(site)}
-            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-white rounded-xl transition-all shadow-hover"
+            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-50 rounded-lg transition-all"
           >
-            <Edit3 size={16} />
+            <Edit3 size={14} />
           </button>
-          <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-all shadow-hover">
-            <Trash2 size={16} />
+          <button className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all">
+            <Trash2 size={14} />
           </button>
         </div>
       )
@@ -240,13 +240,13 @@ export default function SitesPage() {
   ];
 
   return (
-    <div className=" mx-auto space-y-6 pb-20 px-6 pt-5">
+    <div className="mx-auto space-y-4 pb-20 px-6 pt-5">
       {/* High-Density Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-2">Project Portfolio</h1>
-          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
-            <LayoutGrid size={12} className="text-indigo-500" />
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">Project Portfolio</h1>
+          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-2">
+            <LayoutGrid size={10} className="text-indigo-500" />
             Site & Inventory Management
           </p>
         </div>
@@ -271,9 +271,9 @@ export default function SitesPage() {
               });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-indigo-600 px-6 py-2.5 rounded-xl text-[10px] font-black text-white tracking-widest transition-all shadow-lg shadow-indigo-100 uppercase"
+            className="flex items-center gap-2 bg-indigo-600 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all shadow-md shadow-indigo-100 uppercase tracking-wider"
           >
-            <Plus size={14} strokeWidth={4} />
+            <Plus size={14} />
             New Site
           </motion.button>
         </div>

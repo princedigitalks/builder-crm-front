@@ -50,8 +50,8 @@ export default function RemindersPage() {
              {reminder.type === 'Call' ? <PhoneCall size={12} /> : <MessageCircle size={12} />}
           </div>
           <div>
-             <span className="font-bold text-slate-900 text-sm tracking-tight block">{reminder.lead}</span>
-             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{reminder.type} Follow-up</span>
+             <span className="font-semibold text-slate-900 text-xs tracking-tight block">{reminder.lead}</span>
+             <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">{reminder.type} Follow-up</span>
           </div>
         </div>
       )
@@ -60,7 +60,7 @@ export default function RemindersPage() {
       header: 'Project',
       key: 'project',
       render: (reminder: any) => (
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded-md">
+        <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">
            {reminder.project}
         </span>
       )
@@ -69,7 +69,7 @@ export default function RemindersPage() {
       header: 'Schedule',
       key: 'time',
       render: (reminder: any) => (
-        <div className="flex items-center gap-1.5 text-slate-600 font-bold text-xs bg-slate-50 px-2 py-1 w-fit rounded border border-slate-100">
+        <div className="flex items-center gap-1.5 text-slate-600 font-medium text-xs bg-slate-50 px-2 py-0.5 w-fit rounded border border-slate-100">
            <Clock size={12} className="text-slate-400" />
            {reminder.time}
         </div>
@@ -80,7 +80,7 @@ export default function RemindersPage() {
       key: 'options',
       className: 'text-right',
       render: () => (
-        <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ml-1">
+        <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 ml-1">
           <MoreHorizontal size={14} />
         </button>
       )
@@ -88,22 +88,25 @@ export default function RemindersPage() {
   ];
 
   return (
-    <div className=" mx-auto space-y-6 pb-20 px-6">
+    <div className="mx-auto space-y-4 pb-20 px-6 pt-5">
       {/* High-Density Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">Follow-ups</h1>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Daily Task Management</p>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">Follow-ups</h1>
+          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-2">
+            <Calendar size={10} className="text-indigo-500" />
+            Daily Task Management
+          </p>
         </div>
       </div>
 
-      <div className="flex gap-1 bg-slate-50 p-1 rounded-xl w-fit mb-6">
+      <div className="flex gap-1 bg-slate-50 p-1 rounded-lg border border-slate-100 w-fit mb-4">
         {['Missed', 'Today', 'Upcoming', 'Completed'].map((tab) => (
           <button 
             key={tab} 
             onClick={() => setActiveTab(tab)}
             className={cn(
-              "px-5 py-2 rounded-lg text-[10px] uppercase tracking-widest font-black transition-all flex items-center gap-2",
+              "px-4 py-1.5 rounded-md text-[10px] uppercase tracking-wider font-semibold transition-all flex items-center gap-2",
               activeTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
             )}
           >

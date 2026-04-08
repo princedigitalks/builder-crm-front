@@ -45,12 +45,12 @@ export default function LeadsPage() {
       key: 'name',
       render: (lead: Lead) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs">
+          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-semibold text-xs border border-slate-200">
             {lead.name.split(' ').map(n => n[0]).join('')}
           </div>
           <div>
-            <div className="font-bold text-slate-900 text-sm">{lead.name}</div>
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5">
+            <div className="font-semibold text-slate-900 text-xs">{lead.name}</div>
+            <div className="flex items-center gap-1 text-[10px] text-slate-400">
               <Calendar size={10} />
               {lead.createdAt}
             </div>
@@ -61,9 +61,8 @@ export default function LeadsPage() {
     {
       header: 'Phone',
       key: 'phone',
-      render: (lead: Lead) => (
-        <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-          <Phone size={14} className="text-slate-400" />
+      render: (lead: Lead) => (        <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+          <Phone size={12} className="text-slate-400" />
           {lead.phone}
         </div>
       )
@@ -72,8 +71,8 @@ export default function LeadsPage() {
       header: 'Site / Project',
       key: 'site',
       render: (lead: Lead) => (
-        <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-          <Building size={14} className="text-slate-400" />
+        <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+          <Building size={12} className="text-slate-400" />
           {lead.site}
         </div>
       )
@@ -83,7 +82,7 @@ export default function LeadsPage() {
       key: 'source',
       render: (lead: Lead) => (
         <span className={cn(
-          "text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1.5 w-fit",
+          "text-[9px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 w-fit",
           lead.source === 'WhatsApp' ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
           lead.source === 'Facebook' ? "bg-blue-50 text-blue-600 border border-blue-100" :
           "bg-purple-50 text-purple-600 border border-purple-100"
@@ -97,8 +96,8 @@ export default function LeadsPage() {
       header: 'Budget',
       key: 'budget',
       render: (lead: Lead) => (
-        <div className="flex items-center gap-1 text-sm font-bold text-slate-900">
-          <IndianRupee size={14} className="text-slate-400" />
+        <div className="flex items-center gap-0.5 text-xs font-semibold text-slate-800">
+          <IndianRupee size={12} className="text-slate-400" />
           {lead.budget}
         </div>
       )
@@ -108,13 +107,13 @@ export default function LeadsPage() {
       key: 'stage',
       render: (lead: Lead) => (
         <span className={cn(
-          "text-[10px] font-bold px-3 py-1 rounded-full",
-          lead.stage === 'New' ? "bg-indigo-50 text-indigo-600 border border-indigo-100" :
-          lead.stage === 'Contacted' ? "bg-blue-50 text-blue-600 border border-blue-100" :
-          lead.stage === 'Interested' ? "bg-cyan-50 text-cyan-600 border border-cyan-100" :
-          lead.stage === 'Site Visit' ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-          lead.stage === 'Negotiation' ? "bg-amber-50 text-amber-600 border border-amber-100" :
-          "bg-green-50 text-green-600 border border-green-100"
+          "text-[9px] font-semibold px-2 py-0.5 rounded-full border",
+          lead.stage === 'New' ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
+          lead.stage === 'Contacted' ? "bg-blue-50 text-blue-600 border-blue-100" :
+          lead.stage === 'Interested' ? "bg-cyan-50 text-cyan-600 border-cyan-100" :
+          lead.stage === 'Site Visit' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+          lead.stage === 'Negotiation' ? "bg-amber-50 text-amber-600 border-amber-100" :
+          "bg-green-50 text-green-600 border-green-100"
         )}>
           {lead.stage}
         </span>
@@ -124,8 +123,8 @@ export default function LeadsPage() {
       header: 'Assigned To',
       key: 'agent',
       render: (lead: Lead) => (
-        <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-          <User size={14} className="text-slate-400" />
+        <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+          <User size={12} className="text-slate-400" />
           {lead.agent}
         </div>
       )
@@ -135,8 +134,8 @@ export default function LeadsPage() {
       key: 'actions',
       className: 'text-right',
       render: () => (
-        <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all">
-          <MoreVertical size={16} />
+        <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
+          <MoreVertical size={14} />
         </button>
       )
     }

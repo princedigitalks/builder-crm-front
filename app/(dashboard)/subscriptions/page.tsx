@@ -121,7 +121,7 @@ export default function SubscriptionsPage() {
       key: 'planName',
       render: (sub: any) => (
         <div>
-          <p className="text-sm font-bold text-slate-900">{sub.planName}</p>
+          <p className="text-xs font-semibold text-slate-900">{sub.planName}</p>
           <p className="text-[10px] text-slate-400 font-medium">{sub.razorpayPaymentId}</p>
         </div>
       )
@@ -130,7 +130,7 @@ export default function SubscriptionsPage() {
       header: 'Period',
       key: 'startDate',
       render: (sub: any) => (
-        <span className="text-[11px] font-bold text-slate-600">
+        <span className="text-[11px] font-medium text-slate-600">
            {new Date(sub.startDate).toLocaleDateString()} - {new Date(sub.endDate).toLocaleDateString()}
         </span>
       )
@@ -139,7 +139,7 @@ export default function SubscriptionsPage() {
       header: 'Amount',
       key: 'amountPaid',
       render: (sub: any) => (
-        <span className="text-sm font-black text-slate-900">
+        <span className="text-xs font-semibold text-slate-900">
            ₹{sub.amountPaid.toLocaleString()}
         </span>
       )
@@ -150,8 +150,8 @@ export default function SubscriptionsPage() {
       className: 'text-right',
       render: (sub: any) => (
         <span className={cn(
-          "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
-          sub.status === 'expired' ? "bg-slate-100 text-slate-400 border-slate-200" : "bg-rose-100 text-rose-600 border-rose-200"
+          "text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md border",
+          sub.status === 'expired' ? "bg-slate-50 text-slate-400 border-slate-100" : "bg-rose-50 text-rose-600 border-rose-100"
         )}>
           {sub.status}
         </span>
@@ -166,14 +166,17 @@ export default function SubscriptionsPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Header section... no changes */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="mx-auto space-y-4 pb-20 px-6 pt-5">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Billing & Subscription</h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">Manage your plan, limits and billing history.</p>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">Billing & Subscription</h1>
+          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-2">
+            <CreditCard size={10} className="text-indigo-500" />
+            Manage your plan & billing
+          </p>
         </div>
-        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+        <div className="flex bg-slate-50 p-1 rounded-lg border border-slate-100">
            {[
              { id: 'current', label: 'My Plan', icon: Package },
              { id: 'plans', label: 'Upgrade/Renew', icon: Zap },
@@ -183,9 +186,9 @@ export default function SubscriptionsPage() {
                key={tab.id}
                onClick={() => setActiveTab(tab.id as any)}
                className={cn(
-                 "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                 "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
                  activeTab === tab.id 
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" 
+                  ? "bg-white text-indigo-600 shadow-sm" 
                   : "text-slate-400 hover:text-slate-600"
                )}
              >

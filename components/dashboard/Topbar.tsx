@@ -22,20 +22,19 @@ export default function Topbar() {
 
   return (
     <>
-      <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-10 sticky top-0 z-40">
+      <header className="h-14 bg-white border-b border-slate-50 flex items-center justify-between px-6 sticky top-0 z-40">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 capitalize tracking-tight">{getPageTitle()}</h2>
-          <p className="text-xs text-slate-400 font-medium mt-1">
-            Skyline Infra — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          <h2 className="text-sm font-semibold text-slate-800 capitalize tracking-tight">{getPageTitle()}</h2>
+          <p className="text-[10px] text-slate-400 font-medium">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3 pr-6 border-r border-slate-100">
-            <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-              <span className="text-sm font-bold">JD</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 pr-4 border-r border-slate-50">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50">
+              <span className="text-xs font-semibold">BF</span>
             </div>
-           
           </div>
         </div>
       </header>

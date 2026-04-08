@@ -88,11 +88,12 @@ export default function StatusPage() {
   };
 
   return (
-    <div className="space-y-8 mx-auto pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-6">
+    <div className="mx-auto space-y-4 pb-20 px-6 pt-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-2 uppercase">Status</h1>
-          <p className="text-[11px] text-slate-400 font-black uppercase tracking-widest">
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1 uppercase">Status</h1>
+          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-2">
+            <CheckCircle2 size={10} className="text-indigo-500" />
             Lead Kanban Stage Order
           </p>
         </div>
@@ -101,10 +102,10 @@ export default function StatusPage() {
             setFormData({ _id: '', name: '', color: '#6366f1' });
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-200 active:scale-95"
+          className="flex items-center gap-2 bg-indigo-600 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all shadow-md shadow-indigo-100 uppercase tracking-wider"
         >
-          <Plus size={16} strokeWidth={4} />
-          Add Status
+          <Plus size={14} />
+          New Status
         </button>
       </div>
 

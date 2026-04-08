@@ -39,29 +39,27 @@ export default function CommonDialog({
             exit={{ opacity: 0, scale: 0.98, y: 10 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
-              "relative w-full bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden border border-slate-100 flex flex-col",
+              "relative w-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-slate-100 flex flex-col",
               maxWidth,
               className
             )}
           >
             {/* Header */}
-            <div className="px-5 py-4 border-b border-slate-50 flex justify-between items-center bg-white">
+            <div className="px-5 py-3.5 border-b border-slate-50 flex justify-between items-center bg-white">
               <div className="flex flex-col">
-               <h3 className="text-sm font-medium text-slate-900 tracking-[0.15em]">
-  {title}
-</h3>
-                <div className="h-0.5 w-8 bg-indigo-600 rounded-full mt-1" />
+                <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wider">{title}</h3>
+                <div className="h-0.5 w-6 bg-indigo-600 rounded-full mt-1" />
               </div>
               <button 
                 onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+                className="p-1 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
             {/* Content */}
-            <div className="px-5 py-5 overflow-y-auto max-h-[85vh]">
+            <div className="px-5 py-4 overflow-y-auto max-h-[85vh]">
               {children}
             </div>
           </motion.div>

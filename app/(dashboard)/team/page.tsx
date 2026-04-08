@@ -105,8 +105,11 @@ export default function TeamsPage() {
       key: 'teamName',
       render: (team: any) => (
         <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50">
+             <GitMerge size={14} />
+          </div>
           <div>
-            <div className="text-sm font-bold text-slate-900 tracking-tight">{team.teamName}</div>
+            <div className="text-xs font-semibold text-slate-900 tracking-tight">{team.teamName}</div>
           </div>
         </div>
       )
@@ -120,10 +123,10 @@ export default function TeamsPage() {
         const initials = name.split(' ').map((n: string) => n[0]).join('');
         return (
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-[8px]">
+            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-semibold text-[8px]">
               {initials}
             </div>
-            <span className="text-xs font-bold text-slate-700">{name}</span>
+            <span className="text-xs font-medium text-slate-700">{name}</span>
           </div>
         );
       }
@@ -139,18 +142,18 @@ export default function TeamsPage() {
               const name = member?.fullName || 'N/A';
               const initials = name.split(' ').map((n: string) => n[0]).join('');
               return (
-                <div key={m._id || m} className="w-7 h-7 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400" title={name}>
+                <div key={m._id || m} className="w-7 h-7 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[8px] font-semibold text-slate-400" title={name}>
                   {initials}
                 </div>
               );
             })}
             {team.members?.length > 3 && (
-              <div className="w-7 h-7 rounded-full border-2 border-white bg-slate-50 flex items-center justify-center text-[8px] font-bold text-slate-400">
+              <div className="w-7 h-7 rounded-full border-2 border-white bg-slate-50 flex items-center justify-center text-[8px] font-semibold text-slate-400">
                 +{team.members.length - 3}
               </div>
             )}
           </div>
-          <span className="ml-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <span className="ml-3 text-[10px] font-medium text-slate-400 uppercase tracking-widest">
             {team.members?.length || 0} Members
           </span>
         </div>
@@ -161,8 +164,8 @@ export default function TeamsPage() {
       key: 'status',
       render: (team: any) => (
         <span className={cn(
-          "text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-widest",
-          team.status === 'active' ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+          "text-[9px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider border",
+          team.status === 'active' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-50 text-slate-600 border-slate-100"
         )}>
           {team.status}
         </span>
@@ -176,15 +179,15 @@ export default function TeamsPage() {
         <div className="flex items-center justify-end gap-1">
           <button 
             onClick={() => handleEdit(team)}
-            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all"
+            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
           >
-            <Edit3 size={16} />
+            <Edit3 size={14} />
           </button>
           <button 
             onClick={() => handleDelete(team._id)}
-            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-all"
+            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all"
           >
-            <Trash2 size={16} />
+            <Trash2 size={14} />
           </button>
         </div>
       )
@@ -192,51 +195,51 @@ export default function TeamsPage() {
   ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="mx-auto space-y-4 pb-20 px-6 pt-5">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-4">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
-              <GitMerge size={24} />
-            </div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Teams</h1>
-          </div>
-          <p className="text-slate-500 font-medium">Organize staff into teams for direct project assignment.</p>
+          <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">Team Management</h1>
+          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-2">
+            <Users size={10} className="text-indigo-500" />
+            Organize staff into teams
+          </p>
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+          <div className="bg-slate-50 p-1 rounded-lg border border-slate-100 flex items-center">
             <button 
               onClick={() => setViewMode('grid')}
               className={cn(
-                "p-2.5 rounded-lg transition-all",
-                viewMode === 'grid' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                "p-1.5 rounded-md transition-all",
+                viewMode === 'grid' ? "bg-white shadow-sm text-indigo-600" : "text-slate-400 hover:text-slate-600"
               )}
             >
-              <LayoutGridIcon size={18} />
+              <LayoutGridIcon size={14} />
             </button>
             <button 
               onClick={() => setViewMode('table')}
               className={cn(
-                "p-2.5 rounded-lg transition-all",
-                viewMode === 'table' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                "p-1.5 rounded-md transition-all",
+                viewMode === 'table' ? "bg-white shadow-sm text-indigo-600" : "text-slate-400 hover:text-slate-600"
               )}
             >
-              <List size={18} />
+              <List size={14} />
             </button>
           </div>
 
-          <button 
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => {
               setFormData({ _id: '', teamName: '', leaderId: '', members: [] });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl text-sm font-bold transition-all shadow-xl shadow-indigo-200 uppercase tracking-widest"
+            className="flex items-center gap-2 bg-indigo-600 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all shadow-md shadow-indigo-100 uppercase tracking-wider"
           >
-            <Plus size={20} />
-            Create Team
-          </button>
+            <Plus size={14} />
+            New Team
+          </motion.button>
         </div>
       </div>
 
