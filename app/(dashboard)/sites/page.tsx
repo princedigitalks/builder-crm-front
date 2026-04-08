@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, Plus, Search, MapPin, MoreVertical, Edit3, Trash2, Eye, LayoutGrid, IndianRupee, Info, Smartphone, User } from 'lucide-react';
+import { Building2, Plus, Search, MapPin, MoreVertical, Edit3, Trash2, Eye, LayoutGrid, IndianRupee, Info, Smartphone, User, GitMerge } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import SiteModal from '@/components/modals/SiteModal';
@@ -20,39 +20,53 @@ const mockStaff = [
   { id: 3, name: 'Nikhil Mehta' }
 ];
 
+const mockTeams = [
+  { id: '1', name: 'North Sales Elite' },
+  { id: '2', name: 'Commercial Taskforce' }
+];
+
 const mockSites = [
   { 
     id: 1, 
     name: 'Skyline Hub', 
-    location: 'Navi Mumbai, Sector 15', 
+    city: 'Mumbai',
+    area: 'Navi Mumbai, Sector 15', 
     description: 'A modern commercial complex with state-of-the-art facilities.',
     propertyTypes: 'Office, Retail',
     priceRange: '₹1.2Cr - ₹5.5Cr',
     whatsappNumber: 'Sales Main (9876543210)',
     staff: 'Amit Sharma',
-    status: 'Active' 
+    teamId: '1',
+    status: 'Active',
+    images: []
   },
   { 
     id: 2, 
     name: 'Green Valley Villas', 
-    location: 'Pune West, Lonavala Road', 
+    city: 'Pune',
+    area: 'Pune West, Lonavala Road', 
     description: 'Luxury villas surrounded by nature with premium amenities.',
     propertyTypes: 'Villa, Plot',
     priceRange: '₹2.5Cr - ₹8.0Cr',
     whatsappNumber: 'Support Desk (9123456780)',
     staff: 'Kavya Reddy',
-    status: 'Planning' 
+    teamId: '2',
+    status: 'Planning',
+    images: []
   },
   { 
     id: 3, 
     name: 'Oceanview Heights', 
-    location: 'South Mumbai, Marine Drive', 
+    city: 'Mumbai',
+    area: 'South Mumbai, Marine Drive', 
     description: 'Premium sea-facing residential apartments.',
     propertyTypes: '2BHK, 3BHK, 4BHK',
     priceRange: '₹4.5Cr - ₹12.0Cr',
     whatsappNumber: 'Marketing Hub (8877665544)',
     staff: 'Nikhil Mehta',
-    status: 'Active' 
+    teamId: '1',
+    status: 'Active',
+    images: []
   },
 ];
 
@@ -65,20 +79,36 @@ export default function SitesPage() {
   const [formData, setFormData] = useState<any>({
     id: undefined,
     name: '',
-    location: '',
+    city: '',
+    area: '',
     description: '',
     propertyTypes: '',
     priceRange: '',
     whatsappNumber: '',
     staff: '',
-    status: 'Planning'
+    teamId: '',
+    status: 'Planning',
+    images: []
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Submitting Site:', formData);
     setIsModalOpen(false);
-    setFormData({ name: '', location: '', description: '', propertyTypes: '', priceRange: '', whatsappNumber: '', staff: '', status: 'Planning' });
+    setFormData({ 
+      id: undefined, 
+      name: '', 
+      city: '', 
+      area: '', 
+      description: '', 
+      propertyTypes: '', 
+      priceRange: '', 
+      whatsappNumber: '', 
+      staff: '', 
+      teamId: '', 
+      status: 'Planning',
+      images: []
+    });
   };
 
   const handleEdit = (site: any) => {
@@ -93,7 +123,8 @@ export default function SitesPage() {
 
   const filteredSites = mockSites.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.location.toLowerCase().includes(searchTerm.toLowerCase())
+    s.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.area.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const columns = [
@@ -114,11 +145,14 @@ export default function SitesPage() {
     },
     {
       header: 'Location',
-      key: 'location',
+      key: 'city',
       render: (site: any) => (
-        <div className="flex items-center gap-1.5 text-slate-600">
-           <MapPin size={12} className="text-slate-400" />
-           <span className="text-xs font-bold leading-none">{site.location}</span>
+        <div className="flex flex-col gap-1 text-slate-600">
+           <div className="flex items-center gap-1.5">
+              <MapPin size={12} className="text-indigo-500" />
+              <span className="text-xs font-black uppercase tracking-tight">{site.city}</span>
+           </div>
+           <span className="text-[10px] font-medium text-slate-400 truncate max-w-[150px]">{site.area}</span>
         </div>
       )
     },
@@ -150,16 +184,19 @@ export default function SitesPage() {
       )
     },
     {
-      header: 'Site Manager',
-      key: 'staff',
-      render: (site: any) => (
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-[10px] font-bold">
-             {site.staff.charAt(0)}
-          </div>
-          <span className="text-slate-700 text-xs font-bold">{site.staff}</span>
-       </div>
-      )
+      header: 'Assigned Team',
+      key: 'teamId',
+      render: (site: any) => {
+        const team = mockTeams.find(t => t.id === site.teamId);
+        return (
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+               <GitMerge size={12} />
+            </div>
+            <span className="text-slate-700 text-xs font-bold">{team?.name || 'Unassigned'}</span>
+         </div>
+        );
+      }
     },
     {
       header: 'Status',
@@ -219,7 +256,19 @@ export default function SitesPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
-              setFormData({ name: '', location: '', description: '', propertyTypes: '', priceRange: '', status: 'Planning' });
+              setFormData({ 
+                name: '', 
+                city: '', 
+                area: '', 
+                description: '', 
+                propertyTypes: '', 
+                priceRange: '', 
+                whatsappNumber: '', 
+                staff: '', 
+                teamId: '', 
+                status: 'Planning',
+                images: [] 
+              });
               setIsModalOpen(true);
             }}
             className="flex items-center gap-2 bg-indigo-600 px-6 py-2.5 rounded-xl text-[10px] font-black text-white tracking-widest transition-all shadow-lg shadow-indigo-100 uppercase"
@@ -256,6 +305,7 @@ export default function SitesPage() {
         onSubmit={handleSubmit}
         mockWhatsAppNumbers={mockWhatsAppNumbers}
         mockStaff={mockStaff}
+        mockTeams={mockTeams}
       />
 
       {/* View Site Details Modal */}
@@ -288,7 +338,7 @@ export default function SitesPage() {
                    <h2 className="text-3xl font-black text-white tracking-tight">{selectedSite.name}</h2>
                    <div className="flex items-center gap-2 mt-2 text-indigo-100 text-[10px] font-black uppercase tracking-[0.2em]">
                       <MapPin size={12} />
-                      {selectedSite.location}
+                      {selectedSite.area}, {selectedSite.city}
                    </div>
                 </div>
               </div>

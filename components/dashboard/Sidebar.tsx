@@ -116,7 +116,6 @@ export default function Sidebar() {
           <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Projects</p>
           <div className="space-y-1">
             <SidebarItem icon={Building2} label="Sites" href="/sites" />
-            <SidebarItem icon={Home} label="Properties" href="/properties" />
           </div>
         </div>
 
@@ -130,7 +129,8 @@ export default function Sidebar() {
         <div>
           <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-4">Admin</p>
           <div className="space-y-1">
-            <SidebarItem icon={Users2} label="Team" href="/team" />
+            <SidebarItem icon={Users2} label="Staff" href="/staff" />
+            <SidebarItem icon={GitMerge} label="Teams" href="/team" />
             <SidebarItem icon={BarChart3} label="Reports" href="/reports" />
             <SidebarItem icon={CreditCard} label="Billing & Plans" href="/subscriptions" />
             <SidebarItem icon={Activity} label="Status" href="/status" />
