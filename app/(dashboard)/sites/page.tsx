@@ -9,32 +9,18 @@ import CommonTable from '@/components/ui/CommonTable';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchSites, createSite, updateSite, deleteSite, getSiteById } from '@/redux/slices/siteSlice';
 import { fetchTeams, fetchStaffDropdown } from '@/redux/slices/teamSlice';
+import { fetchWhatsapp } from '@/redux/slices/whatsappSlice';
 import { RootState, AppDispatch } from '@/redux/store';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
-// Mock Data for UI demonstration (will be replaced with API)
-const mockWhatsAppNumbers = [
-  { id: 1, name: 'Sales Main (9876543210)' },
-  { id: 2, name: 'Support Desk (9123456780)' },
-  { id: 3, name: 'Marketing Hub (8877665544)' }
-];
-
-const mockStaff = [
-  { id: 1, name: 'Amit Sharma' },
-  { id: 2, name: 'Kavya Reddy' },
-  { id: 3, name: 'Nikhil Mehta' }
-];
-
-const mockTeams = [
-  { id: '1', name: 'North Sales Elite' },
-  { id: '2', name: 'Commercial Taskforce' }
-];
+// Note: WhatsApp numbers, staff, and teams are now fetched dynamically from API
 
 export default function SitesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { sites, pagination, loading } = useSelector((state: RootState) => state.site);
   const { teams, staffDropdown } = useSelector((state: RootState) => state.team);
+  const { whatsappList } = useSelector((state: RootState) => state.whatsapp);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,6 +46,7 @@ export default function SitesPage() {
     dispatch(fetchSites({ page: 1, limit: 10, search: searchTerm }));
     dispatch(fetchTeams({ page: 1, limit: 100 })); // Fetch all teams
     dispatch(fetchStaffDropdown());
+    dispatch(fetchWhatsapp({ page: 1, limit: 100 })); // Fetch all WhatsApp numbers
   }, [dispatch, searchTerm]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -359,7 +346,12 @@ export default function SitesPage() {
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search projects..."
-        pagination={pagination}
+        pagination={{
+          totalItems: pagination.totalRecords,
+          currentPage: pagination.currentPage,
+          totalPages: pagination.totalPages,
+          limit: pagination.limit
+        }}
         onPageChange={(page) => dispatch(fetchSites({ page, limit: pagination.limit, search: searchTerm }))}
       />
 
@@ -370,7 +362,10 @@ export default function SitesPage() {
         formData={formData}
         setFormData={setFormData}
         onSubmit={handleSubmit}
-        mockWhatsAppNumbers={mockWhatsAppNumbers}
+        mockWhatsAppNumbers={whatsappList.filter(w => w.isActive).map(w => ({
+          id: w._id,
+          name: `${w.name} (${w.number})`
+        }))}
         mockStaff={staffDropdown}
         mockTeams={teams}
       />
