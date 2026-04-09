@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
-import { 
-  Filter, 
-  Download, 
-  MoreVertical, 
-  Plus, 
-  Search, 
-  X, 
-  Phone, 
-  Building, 
-  Target, 
-  IndianRupee, 
-  User, 
+import React, { useState, useEffect } from 'react';
+import {
+  Filter,
+  Download,
+  MoreVertical,
+  Edit3,
+  Plus,
+  Search,
+  X,
+  Phone,
+  Building,
+  Target,
+  IndianRupee,
+  User,
   Calendar,
   LayoutGrid,
   List,
@@ -20,24 +21,74 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
-import { LEADS as INITIAL_LEADS, STAGES as DEFAULT_STAGES, Lead } from '@/lib/mockData';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/store';
+import {
+  fetchLeads,
+  fetchLeadStatuses,
+  fetchStaffDropdown,
+  fetchSitesDropdown,
+  createLead,
+  updateLead,
+  deleteLead
+} from '@/redux/slices/leadSlice';
 import LeadModal from '@/components/modals/LeadModal';
 import CommonTable from '@/components/ui/CommonTable';
 
-// You can eventually fetch this from the admin status page configuration
-const STAGES = DEFAULT_STAGES;
+// Define Lead interface for TypeScript
+interface Lead {
+  _id: string;
+  name: string;
+  phone: string;
+  site: string;
+  siteId: string;
+  source: 'WhatsApp' | 'Facebook' | 'Website' | 'Walk-in' | 'Referral';
+  budget: string;
+  stage: string;
+  stageId: string;
+  agent: string;
+  agentId: string;
+  createdAt: string;
+  notes?: string;
+}
+import Swal from 'sweetalert2';
 
 export default function LeadsPage() {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
-  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
-  const [searchTerm, setSearchTerm] = useState('');
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    leads,
+    leadStatuses,
+    staffDropdown,
+    sitesDropdown,
+    pagination,
+    loading
+  } = useSelector((state: RootState) => state.lead);
 
-  const filteredLeads = leads.filter(lead => 
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.site.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const currentLimit = 10;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    dispatch(fetchLeads({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+  }, [dispatch, currentPage, debouncedSearch]);
+
+  useEffect(() => {
+    dispatch(fetchLeadStatuses());
+    dispatch(fetchStaffDropdown());
+    dispatch(fetchSitesDropdown());
+  }, [dispatch]);
 
   const columns = [
     {
@@ -105,27 +156,60 @@ export default function LeadsPage() {
     {
       header: 'Current Stage',
       key: 'stage',
-      render: (lead: Lead) => (
-        <span className={cn(
-          "text-[9px] font-semibold px-2 py-0.5 rounded-full border",
-          lead.stage === 'New' ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
-          lead.stage === 'Contacted' ? "bg-blue-50 text-blue-600 border-blue-100" :
-          lead.stage === 'Interested' ? "bg-cyan-50 text-cyan-600 border-cyan-100" :
-          lead.stage === 'Site Visit' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-          lead.stage === 'Negotiation' ? "bg-amber-50 text-amber-600 border-amber-100" :
-          "bg-green-50 text-green-600 border-green-100"
-        )}>
-          {lead.stage}
-        </span>
-      )
+      render: (lead: any) => {
+        const status = leadStatuses.find((s: any) => s._id === lead.stageId);
+        return (
+          <span
+            className="text-[9px] font-semibold px-2 py-0.5 rounded-full border"
+            style={{
+              backgroundColor: status?.color ? `${status.color}20` : '#f3f4f6',
+              color: status?.color || '#6b7280',
+              borderColor: status?.color ? `${status.color}40` : '#d1d5db'
+            }}
+          >
+            {lead.stage}
+          </span>
+        );
+      }
     },
     {
       header: 'Assigned To',
       key: 'agent',
-      render: (lead: Lead) => (
-        <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+      render: (lead: any) => (
+        <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium group cursor-pointer">
           <User size={12} className="text-slate-400" />
-          {lead.agent}
+          <div className="relative w-full">
+            <span className="group-hover:hidden block">{lead.agent || 'Unassigned'}</span>
+            <select
+              value={lead.agentId || ''}
+              onChange={(e) => handleAgentChange(lead._id, e.target.value)}
+              className="hidden group-hover:block bg-white border border-slate-200 rounded px-1 text-xs font-medium cursor-pointer w-full"
+            >
+              <option value="">Unassigned</option>
+              {/* If lead has a site, show its team members */}
+              {lead.siteId && (
+                <>
+                  {(() => {
+                    // Find the site and get its team members
+                    const site = sitesDropdown.find((s: any) => s._id === lead.siteId);
+                    if (site?.teamId) {
+                      // This is simplified - in a real app you'd fetch team members for this specific lead
+                      return staffDropdown.map(staff => (
+                        <option key={staff._id} value={staff._id}>{staff.name}</option>
+                      ));
+                    }
+                    return null;
+                  })()}
+                </>
+              )}
+              {/* Fallback to all staff if no site-specific team */}
+              {(!lead.siteId || !sitesDropdown.find((s: any) => s._id === lead.siteId)?.teamId) &&
+                staffDropdown.map(staff => (
+                  <option key={staff._id} value={staff._id}>{staff.name}</option>
+                ))
+              }
+            </select>
+          </div>
         </div>
       )
     },
@@ -133,10 +217,21 @@ export default function LeadsPage() {
       header: 'Actions',
       key: 'actions',
       className: 'text-right',
-      render: () => (
-        <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
-          <MoreVertical size={14} />
-        </button>
+      render: (lead: any) => (
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => handleOpenModal(lead)}
+            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
+          >
+            <Edit3 size={14} />
+          </button>
+          <button
+            onClick={() => handleDelete(lead)}
+            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all"
+          >
+            <MoreVertical size={14} />
+          </button>
+        </div>
       )
     }
   ];
@@ -149,28 +244,153 @@ export default function LeadsPage() {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent, stageId: string) => {
+  const handleDrop = async (e: React.DragEvent, stageId: string) => {
     e.preventDefault();
     const leadId = e.dataTransfer.getData('leadId');
-    setLeads(prevLeads => 
-      prevLeads.map(lead => 
-        lead.id === leadId ? { ...lead, stage: stageId as any } : lead
-      )
-    );
+
+    // Find the status object by name
+    const statusObj = leadStatuses.find((s: any) => s.name === stageId);
+    if (statusObj) {
+      try {
+        await dispatch(updateLead({ id: leadId, data: { stageId: statusObj._id } })).unwrap();
+      } catch (error) {
+        console.error('Error updating lead stage:', error);
+      }
+    }
   };
 
-  const KanbanCard = ({ lead, onDragStart }: { lead: Lead, onDragStart: (e: React.DragEvent, id: string) => void }) => (
+  const handleDelete = async (lead: any) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to delete "${lead.name}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'rounded-2xl',
+        title: 'text-lg font-bold text-slate-900',
+        htmlContainer: 'text-sm text-slate-600',
+        confirmButton: 'px-4 py-2 rounded-lg text-sm font-semibold',
+        cancelButton: 'px-4 py-2 rounded-lg text-sm font-semibold'
+      }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await dispatch(deleteLead(lead._id)).unwrap();
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Lead has been deleted successfully.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          customClass: {
+            popup: 'rounded-2xl',
+            title: 'text-lg font-bold text-emerald-600'
+          }
+        });
+      } catch (error) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to delete lead. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#ef4444',
+          customClass: {
+            popup: 'rounded-2xl',
+            title: 'text-lg font-bold text-red-600'
+          }
+        });
+      }
+    }
+  };
+
+  const handleSubmit = async (data: any) => {
+    try {
+      if (editingLead && !editingLead.isNewWithPreSelect) {
+        // This is an actual edit operation
+        await dispatch(updateLead({ id: editingLead._id, data })).unwrap();
+        // Refresh the leads to ensure consistent data
+        dispatch(fetchLeads({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+      } else {
+        // This is a create operation (either from scratch or with pre-selected status)
+        await dispatch(createLead(data)).unwrap();
+        // Refresh the leads to ensure the agent name is properly displayed
+        dispatch(fetchLeads({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error submitting lead:', error);
+    }
+  };
+
+  const handleOpenModal = (lead: any = null) => {
+    setEditingLead(lead);
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenModalWithStatus = (statusName: string) => {
+    // Find the status object by name
+    const statusObj = leadStatuses.find((s: any) => s.name === statusName);
+    if (statusObj) {
+      // For new lead creation with pre-selected status, pass status info without setting as editingLead
+      setEditingLead({
+        stageId: statusObj._id,
+        stage: statusObj.name,
+        isNewWithPreSelect: true // Flag to indicate this is a new lead with pre-selected status
+      });
+    } else {
+      setEditingLead(null);
+    }
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setEditingLead(null);
+  };
+
+  const handleAgentChange = async (leadId: string, agentId: string) => {
+    try {
+      await dispatch(updateLead({
+        id: leadId,
+        data: { agentId: agentId || null }
+      })).unwrap();
+    } catch (error) {
+      console.error('Error updating agent:', error);
+    }
+  };
+
+  const KanbanCard = ({ lead, onDragStart, onEdit, onDelete }: {
+    lead: any,
+    onDragStart: (e: React.DragEvent, id: string) => void,
+    onEdit: (lead: any) => void,
+    onDelete: (lead: any) => void
+  }) => (
     <motion.div
-      layoutId={lead.id}
+      layoutId={lead._id}
       draggable
-      onDragStart={(e: any) => onDragStart(e, lead.id)}
+      onDragStart={(e: any) => onDragStart(e, lead._id)}
       className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all cursor-grab active:cursor-grabbing group"
     >
       <div className="flex justify-between items-start mb-2">
         <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{lead.name}</h4>
-        <button className="p-1 text-slate-300 hover:text-slate-500 rounded-lg hover:bg-slate-50">
-          <MoreVertical size={14} />
-        </button>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => onEdit(lead)}
+            className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
+          >
+            <Edit3 size={14} />
+          </button>
+          <button
+            onClick={() => onDelete(lead)}
+            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all"
+          >
+            <MoreVertical size={14} />
+          </button>
+        </div>
       </div>
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-wider">{lead.source}</span>
@@ -182,7 +402,7 @@ export default function LeadsPage() {
           {lead.site}
         </div>
         <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-[8px] font-bold text-indigo-700 border border-white shadow-sm">
-          {lead.agent.split(' ').map(n => n[0]).join('')}
+          {lead?.agent && lead.agent !== 'Unassigned' ? lead.agent.split(' ').map((n: string) => n[0]).join('') : 'U'}
         </div>
       </div>
     </motion.div>
@@ -202,7 +422,7 @@ export default function LeadsPage() {
           <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden md:block" />
 
           <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
-            <button 
+            <button   
               onClick={() => setViewMode('table')}
               className={cn(
                 "p-2 rounded-lg transition-all",
@@ -246,21 +466,21 @@ export default function LeadsPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <CommonTable 
+            <CommonTable
               title="Leads Pipeline"
               columns={columns}
-              data={filteredLeads}
-              loading={false}
+              data={leads}
+              loading={loading}
               searchValue={searchTerm}
               onSearchChange={setSearchTerm}
               searchPlaceholder="Search leads by name, phone or site..."
               pagination={{
-                totalItems: filteredLeads.length,
-                totalPages: 1,
-                currentPage: 1,
-                limit: 10
+                totalItems: pagination.totalRecords,
+                totalPages: pagination.totalPages,
+                currentPage: currentPage,
+                limit: currentLimit
               }}
-              onPageChange={() => {}}
+              onPageChange={setCurrentPage}
             />
           </motion.div>
         ) : (
@@ -271,49 +491,59 @@ export default function LeadsPage() {
             exit={{ opacity: 0, y: -20 }}
             className="flex gap-6 overflow-x-auto pb-8 min-h-[calc(100vh-250px)]"
           >
-            {STAGES.map(stage => (
-              <div 
-                key={stage.id} 
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, stage.id)}
-                className="min-w-[300px] max-w-[300px] flex flex-col gap-4"
-              >
-                <div className="flex items-center justify-between px-3">
-                  <div className="flex items-center gap-2">
-                    <div className={cn("w-2 h-2 rounded-full", stage.color)} />
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">{stage.label}</h3>
-                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                      {leads.filter(l => l.stage === stage.id).length}
-                    </span>
-                  </div>
-                  <button className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                    <Plus size={16} />
-                  </button>
-                </div>
-                <div className="flex-1 space-y-4 p-3 bg-slate-50 rounded-[2rem] border border-slate-100/50 min-h-[500px]">
-                  {leads.filter(l => l.stage === stage.id).map(lead => (
-                    <KanbanCard key={lead.id} lead={lead} onDragStart={handleDragStart} />
-                  ))}
-                  {leads.filter(l => l.stage === stage.id).length === 0 && (
-                    <div className="h-32 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center">
-                      <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No leads</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+             {leadStatuses.map((stage: any) => (
+               <div
+                 key={stage._id}
+                 onDragOver={handleDragOver}
+                 onDrop={(e) => handleDrop(e, stage.name)}
+                 className="min-w-[300px] max-w-[300px] flex flex-col gap-4"
+               >
+                 <div className="flex items-center justify-between px-3">
+                   <div className="flex items-center gap-2">
+                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color || '#cbd5e1' }} />
+                     <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">{stage.name}</h3>
+                     <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                       {leads.filter(l => l.stageId === stage._id).length}
+                     </span>
+                   </div>
+                    <button
+                      onClick={() => handleOpenModalWithStatus(stage.name)}
+                      className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
+                    >
+                      <Plus size={16} />
+                    </button>
+                 </div>
+                 <div className="flex-1 space-y-4 p-3 bg-slate-50 rounded-[2rem] border border-slate-100/50 min-h-[500px]">
+                   {leads.filter(l => l.stageId === stage._id).map(lead => (
+                     <KanbanCard
+                       key={lead._id}
+                       lead={lead}
+                       onDragStart={handleDragStart}
+                       onEdit={handleOpenModal}
+                       onDelete={handleDelete}
+                     />
+                   ))}
+                   {leads.filter(l => l.stageId === stage._id).length === 0 && (
+                     <div className="h-32 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center">
+                       <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No leads</p>
+                     </div>
+                   )}
+                   </div>
+                 </div>
+               ))}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Add Lead Modal */}
-      <LeadModal 
+      {/* Add/Edit Lead Modal */}
+      <LeadModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={(e) => {
-          e.preventDefault();
-          setIsAddModalOpen(false);
-        }}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmit}
+        loading={loading}
+        initialData={editingLead}
+        leadStatuses={leadStatuses}
+        sitesDropdown={sitesDropdown}
       />
     </div>
   );
