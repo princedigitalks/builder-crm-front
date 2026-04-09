@@ -81,6 +81,18 @@ export const deleteSite = createAsyncThunk(
   }
 );
 
+export const updateSiteStatus = createAsyncThunk(
+  'site/updateSiteStatus',
+  async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(`/site/${id}/status`, data);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update site status');
+    }
+  }
+);
+
 export const getSiteById = createAsyncThunk(
   'site/getSiteById',
   async (id: string, { rejectWithValue }) => {
@@ -96,7 +108,16 @@ export const getSiteById = createAsyncThunk(
 const siteSlice = createSlice({
   name: 'site',
   initialState,
-  reducers: {},
+  reducers: {
+    syncSiteStatus: (state, action) => {
+      const { siteId, whatsappStatus, chatbotStatus } = action.payload;
+      const site = state.sites.find((s) => s._id === siteId);
+      if (site) {
+        site.whatsappStatus = whatsappStatus;
+        site.chatbotStatus = chatbotStatus;
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Fetch Sites
@@ -129,6 +150,13 @@ const siteSlice = createSlice({
         state.sites = state.sites.filter((s) => s._id !== action.payload);
         state.pagination.totalRecords -= 1;
       })
+      // Update Site Status
+       .addCase(updateSiteStatus.fulfilled, (state, action) => {
+        const index = state.sites.findIndex((s) => s._id === action.payload._id);
+        if (index !== -1) {
+          state.sites[index] = action.payload;
+        }
+      })
       // Get Site by ID
       .addCase(getSiteById.fulfilled, (state, action) => {
         // Can be used for view modal
@@ -136,4 +164,5 @@ const siteSlice = createSlice({
   },
 });
 
+export const { syncSiteStatus } = siteSlice.actions;
 export default siteSlice.reducer;

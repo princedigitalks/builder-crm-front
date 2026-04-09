@@ -4,15 +4,17 @@ import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Search, MapPin, MoreVertical, Edit3, Trash2, Eye, LayoutGrid, IndianRupee, Info, Smartphone, User, GitMerge } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { getSocket } from '@/lib/socket';
 import SiteModal from '@/components/modals/SiteModal';
 import CommonTable from '@/components/ui/CommonTable';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchSites, createSite, updateSite, deleteSite, getSiteById } from '@/redux/slices/siteSlice';
+import { fetchSites, createSite, updateSite, deleteSite, getSiteById, syncSiteStatus } from '@/redux/slices/siteSlice';
 import { fetchTeams, fetchStaffDropdown } from '@/redux/slices/teamSlice';
 import { fetchWhatsapp } from '@/redux/slices/whatsappSlice';
 import { RootState, AppDispatch } from '@/redux/store';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { toast } from 'react-hot-toast';
 
 // Note: WhatsApp numbers, staff, and teams are now fetched dynamically from API
 
@@ -26,6 +28,7 @@ export default function SitesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedSite, setSelectedSite] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
 
   const [formData, setFormData] = useState<any>({
     name: '',
@@ -43,11 +46,27 @@ export default function SitesPage() {
   });
 
   useEffect(() => {
+    setMounted(true);
     dispatch(fetchSites({ page: 1, limit: 10, search: searchTerm }));
     dispatch(fetchTeams({ page: 1, limit: 100 })); // Fetch all teams
     dispatch(fetchStaffDropdown());
     dispatch(fetchWhatsapp({ page: 1, limit: 100 })); // Fetch all WhatsApp numbers
+
+    const socket = getSocket();
+    socket.on('site_status_update', (update: { siteId: string; whatsappStatus: string; chatbotStatus: string }) => {
+      dispatch(syncSiteStatus(update));
+    });
+
+    return () => {
+      socket.off('site_status_update');
+    };
   }, [dispatch, searchTerm]);
+
+
+  const { builder } = useSelector((state: RootState) => state.auth);
+  const siteLimit = builder?.currentLimits?.noOfSites || 0;
+  const currentSiteCount = pagination.totalRecords;
+  const isLimitReached = currentSiteCount >= siteLimit;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,9 +112,15 @@ export default function SitesPage() {
       if (formData._id) {
         // Update
         await dispatch(updateSite({ id: formData._id, data: formDataToSend })).unwrap();
+        toast.success('Site updated successfully');
       } else {
         // Create
+        if (isLimitReached) {
+          toast.error(`Site limit reached! You can only create ${siteLimit} sites.`);
+          return;
+        }
         await dispatch(createSite(formDataToSend)).unwrap();
+        toast.success('Site created successfully');
       }
 
       setIsModalOpen(false);
@@ -113,8 +138,8 @@ export default function SitesPage() {
         images: [],
         originalImages: []
       });
-    } catch (error) {
-      console.error('Error submitting site:', error);
+    } catch (error: any) {
+      toast.error(error || 'Failed to submit site');
     }
   };
 
@@ -135,7 +160,7 @@ export default function SitesPage() {
   const handleDelete = async (site: any) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
-      text: `Do you want to delete "${site.name}"? This action cannot be undone.`,
+      text: `Do you want to delete "${site.name}"? This will notify the admin to unlink services.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
@@ -154,33 +179,12 @@ export default function SitesPage() {
     if (result.isConfirmed) {
       try {
         await dispatch(deleteSite(site._id)).unwrap();
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Site has been deleted successfully.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-          customClass: {
-            popup: 'rounded-2xl',
-            title: 'text-lg font-bold text-emerald-600'
-          }
-        });
-      } catch (error) {
-        Swal.fire({
-          title: 'Error!',
-          text: 'Failed to delete site. Please try again.',
-          icon: 'error',
-          confirmButtonColor: '#ef4444',
-          customClass: {
-            popup: 'rounded-2xl',
-            title: 'text-lg font-bold text-red-600'
-          }
-        });
+        toast.success('Site deletion requested');
+      } catch (error: any) {
+        toast.error(error || 'Failed to request deletion');
       }
     }
   };
-
-  // Sites are fetched from API with search
 
   const columns = [
     {
@@ -226,16 +230,33 @@ export default function SitesPage() {
       )
     },
     {
-      header: 'Communication',
-      key: 'whatsappNumber',
+      header: 'Connection Health',
+      key: 'whatsappStatus',
       render: (site: any) => (
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1.5 text-indigo-600">
              <Smartphone size={10} />
-             <span className="text-[10px] font-semibold">{site.whatsappNumber.split(' (')[0]}</span>
+             <span className="text-[10px] font-semibold">{site.whatsappNumber?.split(' (')[0] || 'N/A'}</span>
           </div>
-          <span className="text-[9px] text-slate-400">+{site.whatsappNumber.split('(')[1].replace(')', '')}</span>
+          <span className={cn(
+            "text-[8px] font-black uppercase px-2 py-0.5 rounded-full w-fit",
+            site.whatsappStatus === 'connected' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+          )}>
+            {site.whatsappStatus || 'disconnected'}
+          </span>
        </div>
+      )
+    },
+    {
+      header: 'Chatbot Engine',
+      key: 'chatbotStatus',
+      render: (site: any) => (
+        <span className={cn(
+          "text-[9px] font-black uppercase px-2 py-0.5 rounded-lg border",
+          site.chatbotStatus === 'active' ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-400 border-slate-100"
+        )}>
+          {site.chatbotStatus || 'inactive'}
+        </span>
       )
     },
     {
@@ -271,24 +292,25 @@ export default function SitesPage() {
     {
       header: 'Actions',
       key: 'actions',
-      className: 'text-right',
+      className: "text-right",
       render: (site: any) => (
         <div className="flex items-center justify-end gap-1">
-          <button 
+          <button
             onClick={() => handleView(site)}
             className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
           >
             <Eye size={14} />
           </button>
-          <button 
+          <button
             onClick={() => handleEdit(site)}
-            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-50 rounded-lg transition-all"
+            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
           >
             <Edit3 size={14} />
           </button>
            <button
               onClick={() => handleDelete(site)}
               className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all"
+              title="Delete Site"
             >
               <Trash2 size={14} />
             </button>
@@ -301,19 +323,50 @@ export default function SitesPage() {
     <div className="mx-auto space-y-4 pb-20 px-6 pt-5">
       {/* High-Density Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-4">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">Project Portfolio</h1>
-          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-2">
-            <LayoutGrid size={10} className="text-indigo-500" />
-            Site & Inventory Management
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">Project Portfolio</h1>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-2">
+              <LayoutGrid size={10} className="text-indigo-500" />
+              Site & Inventory Management
+            </p>
+          </div>
+          
+          <div className="h-8 w-px bg-slate-100 mx-2" />
+          
+          {mounted && (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Usage Limit</span>
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full transition-all duration-1000",
+                      isLimitReached ? "bg-rose-500" : currentSiteCount / siteLimit > 0.8 ? "bg-amber-500" : "bg-indigo-500"
+                    )}
+                    style={{ width: `${Math.min((currentSiteCount / siteLimit) * 100, 100)}%` }}
+                  />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-black tracking-tighter",
+                  isLimitReached ? "text-rose-600" : "text-slate-600"
+                )}>
+                  {currentSiteCount}/{siteLimit}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center gap-3">
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={mounted && !isLimitReached ? { scale: 1.02 } : {}}
+            whileTap={mounted && !isLimitReached ? { scale: 0.98 } : {}}
             onClick={() => {
+              if (isLimitReached) {
+                toast.error(`You have reached your limit of ${siteLimit} sites. Please upgrade your plan.`);
+                return;
+              }
               setFormData({
                 name: '',
                 city: '',
@@ -330,7 +383,13 @@ export default function SitesPage() {
               });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-indigo-600 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all shadow-md shadow-indigo-100 uppercase tracking-wider"
+            className={cn(
+               "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all shadow-md uppercase tracking-wider",
+               mounted && isLimitReached 
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none" 
+                : "bg-indigo-600 text-white shadow-indigo-100 hover:bg-indigo-700"
+            )}
+            title={mounted && isLimitReached ? "Site limit reached" : "Add new site"}
           >
             <Plus size={14} />
             New Site
@@ -347,10 +406,10 @@ export default function SitesPage() {
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search projects..."
         pagination={{
-          totalItems: pagination.totalRecords,
-          currentPage: pagination.currentPage,
-          totalPages: pagination.totalPages,
-          limit: pagination.limit
+            totalItems: pagination.totalRecords,
+            currentPage: pagination.currentPage,
+            totalPages: pagination.totalPages,
+            limit: pagination.limit
         }}
         onPageChange={(page) => dispatch(fetchSites({ page, limit: pagination.limit, search: searchTerm }))}
       />
