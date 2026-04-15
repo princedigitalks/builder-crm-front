@@ -7,6 +7,10 @@ import leadStatusReducer from './slices/statusSlice';
 import whatsappReducer from './slices/whatsappSlice';
 import siteReducer from './slices/siteSlice';
 import leadReducer from './slices/leadSlice';
+import requirementTypeReducer from './slices/requirementTypeSlice';
+import propertyTypeReducer from './slices/propertyTypeSlice';
+import cityAreaReducer from './slices/cityAreaSlice';
+import budgetReducer from './slices/budgetSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +22,10 @@ export const store = configureStore({
     whatsapp: whatsappReducer,
     site: siteReducer,
     lead: leadReducer,
+    requirementType: requirementTypeReducer,
+    propertyType: propertyTypeReducer,
+    cityArea: cityAreaReducer,
+    budget: budgetReducer,
   },
 });
 

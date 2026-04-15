@@ -15,7 +15,8 @@ import {
   FileText, 
   Users2, 
   BarChart3,
-  CreditCard
+  CreditCard,
+  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -159,6 +160,7 @@ export default function Sidebar() {
                 <SidebarItem icon={BarChart3} label="Reports" href="/reports" />
                 <SidebarItem icon={CreditCard} label="Billing & Plans" href="/subscriptions" />
                 <SidebarItem icon={Activity} label="Status" href="/status" />
+                <SidebarItem icon={BookOpen} label="Masters" href="/masters" />
               </div>
             </div>
           </>

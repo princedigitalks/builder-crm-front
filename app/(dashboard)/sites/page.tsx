@@ -11,46 +11,59 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchSites, createSite, updateSite, deleteSite, getSiteById, syncSiteStatus } from '@/redux/slices/siteSlice';
 import { fetchTeams, fetchStaffDropdown } from '@/redux/slices/teamSlice';
 import { fetchWhatsapp } from '@/redux/slices/whatsappSlice';
+import { fetchRequirementTypes } from '@/redux/slices/requirementTypeSlice';
+import { fetchPropertyTypes } from '@/redux/slices/propertyTypeSlice';
+import { fetchCities, fetchAreasByCity, addCityArea, clearAreas } from '@/redux/slices/cityAreaSlice';
+import { fetchBudgets, createBudget } from '@/redux/slices/budgetSlice';
 import { RootState, AppDispatch } from '@/redux/store';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { toast } from 'react-hot-toast';
 
-// Note: WhatsApp numbers, staff, and teams are now fetched dynamically from API
+const emptyForm = {
+  name: '',
+  city: '',
+  area: '',
+  description: '',
+  propertyTypes: [] as string[],
+  requirementTypes: [] as string[],
+  budgets: [] as string[],
+  priceRange: '',
+  whatsappNumber: '',
+  staff: '',
+  teamId: '',
+  status: 'Planning',
+  images: [] as any[],
+  originalImages: [] as any[],
+};
 
 export default function SitesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { sites, pagination, loading } = useSelector((state: RootState) => state.site);
   const { teams, staffDropdown } = useSelector((state: RootState) => state.team);
   const { whatsappList } = useSelector((state: RootState) => state.whatsapp);
+  const { requirementTypes } = useSelector((state: RootState) => state.requirementType);
+  const { propertyTypes } = useSelector((state: RootState) => state.propertyType);
+  const { cities, areas } = useSelector((state: RootState) => state.cityArea);
+  const { budgets } = useSelector((state: RootState) => state.budget);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedSite, setSelectedSite] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
-
-  const [formData, setFormData] = useState<any>({
-    name: '',
-    city: '',
-    area: '',
-    description: '',
-    propertyTypes: '',
-    priceRange: '',
-    whatsappNumber: '',
-    staff: '',
-    teamId: '',
-    status: 'Planning',
-    images: [],
-    originalImages: [] // Track original images for comparison
-  });
+  const [formData, setFormData] = useState<any>(emptyForm);
 
   useEffect(() => {
     setMounted(true);
     dispatch(fetchSites({ page: 1, limit: 10, search: searchTerm }));
-    dispatch(fetchTeams({ page: 1, limit: 100 })); // Fetch all teams
+    dispatch(fetchTeams({ page: 1, limit: 100 }));
     dispatch(fetchStaffDropdown());
-    dispatch(fetchWhatsapp({ page: 1, limit: 100 })); // Fetch all WhatsApp numbers
+    dispatch(fetchWhatsapp({ page: 1, limit: 100 }));
+    dispatch(fetchRequirementTypes());
+    dispatch(fetchPropertyTypes());
+    dispatch(fetchCities());
+    dispatch(fetchBudgets());
 
     const socket = getSocket();
     socket.on('site_status_update', (update: { siteId: string; whatsappStatus: string; chatbotStatus: string }) => {
@@ -62,59 +75,64 @@ export default function SitesPage() {
     };
   }, [dispatch, searchTerm]);
 
-
   const { builder } = useSelector((state: RootState) => state.auth);
   const siteLimit = builder?.currentLimits?.noOfSites || 0;
   const currentSiteCount = pagination.totalRecords;
   const isLimitReached = currentSiteCount >= siteLimit;
+
+  const handleCityChange = (city: string) => {
+    if (city.trim()) dispatch(fetchAreasByCity(city));
+    else dispatch(clearAreas());
+  };
+
+  const handleAddCityArea = (city: string, area?: string) => {
+    dispatch(addCityArea({ city, area }));
+  };
+
+  const handleAddBudget = async (data: { label: string; minAmount: number; maxAmount: number }) => {
+    const result = await dispatch(createBudget(data)).unwrap();
+    return result;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const formDataToSend = new FormData();
 
-      // Add text fields
+      const skipKeys = new Set(['images', 'originalImages', '_id', 'requirementTypes', 'propertyTypes', 'budgets']);
       Object.keys(formData).forEach(key => {
-        if (key !== 'images' && key !== 'originalImages' && key !== '_id') {
-          formDataToSend.append(key, formData[key]);
-        }
+        if (skipKeys.has(key)) return;
+        formDataToSend.append(key, formData[key] ?? '');
       });
 
-      // Handle images for update vs create
+      (formData.requirementTypes || []).forEach((id: string) => {
+        formDataToSend.append('requirementTypes', id);
+      });
+
+      (formData.propertyTypes || []).forEach((id: string) => {
+        formDataToSend.append('propertyTypes', id);
+      });
+
+      (formData.budgets || []).forEach((id: string) => {
+        formDataToSend.append('budgets', id);
+      });
+
       if (formData._id) {
-        // Update mode
         const currentImages = formData.images || [];
-        const originalImages = formData.originalImages || [];
-
-        // Find which original images are still present (strings)
         const keptImages = currentImages.filter((img: any) => typeof img === 'string');
-        // Find new images to upload (file objects)
         const newImages = currentImages.filter((img: any) => img.file);
-
-        // Send kept images as JSON string
         formDataToSend.append('keptImages', JSON.stringify(keptImages));
-
-        // Add new image files
-        newImages.forEach((img: any) => {
-          formDataToSend.append('images', img.file);
-        });
+        newImages.forEach((img: any) => formDataToSend.append('images', img.file));
       } else {
-        // Create mode - just add all images
-        if (formData.images && formData.images.length > 0) {
-          formData.images.forEach((img: any) => {
-            if (img.file) {
-              formDataToSend.append('images', img.file);
-            }
-          });
-        }
+        (formData.images || []).forEach((img: any) => {
+          if (img.file) formDataToSend.append('images', img.file);
+        });
       }
 
       if (formData._id) {
-        // Update
         await dispatch(updateSite({ id: formData._id, data: formDataToSend })).unwrap();
         toast.success('Site updated successfully');
       } else {
-        // Create
         if (isLimitReached) {
           toast.error(`Site limit reached! You can only create ${siteLimit} sites.`);
           return;
@@ -124,20 +142,7 @@ export default function SitesPage() {
       }
 
       setIsModalOpen(false);
-      setFormData({
-        name: '',
-        city: '',
-        area: '',
-        description: '',
-        propertyTypes: '',
-        priceRange: '',
-        whatsappNumber: '',
-        staff: '',
-        teamId: '',
-        status: 'Planning',
-        images: [],
-        originalImages: []
-      });
+      setFormData(emptyForm);
     } catch (error: any) {
       toast.error(error || 'Failed to submit site');
     }
@@ -146,9 +151,19 @@ export default function SitesPage() {
   const handleEdit = (site: any) => {
     setFormData({
       ...site,
-      originalImages: [...(site.images || [])], // Store original images for comparison
-      images: [...(site.images || [])] // Initialize images with existing ones
+      propertyTypes: (site.propertyTypes || []).map((pt: any) =>
+        typeof pt === 'object' ? pt._id : pt
+      ),
+      requirementTypes: (site.requirementTypes || []).map((rt: any) =>
+        typeof rt === 'object' ? rt._id : rt
+      ),
+      budgets: (site.budgets || []).map((b: any) =>
+        typeof b === 'object' ? b._id : b
+      ),
+      originalImages: [...(site.images || [])],
+      images: [...(site.images || [])]
     });
+    if (site.city) dispatch(fetchAreasByCity(site.city));
     setIsModalOpen(true);
   };
 
@@ -219,7 +234,30 @@ export default function SitesPage() {
       header: 'Property Types',
       key: 'propertyTypes',
       render: (site: any) => (
-        <span className="text-sm text-slate-600">{site.propertyTypes}</span>
+        <div className="flex flex-wrap gap-1">
+          {(site.propertyTypes || []).length === 0
+            ? <span className="text-xs text-slate-400">—</span>
+            : (site.propertyTypes || []).map((pt: any, i: number) => (
+              <span key={i} className="text-[10px] font-semibold px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md border border-amber-100">
+                {typeof pt === 'object' ? pt.name : pt}
+              </span>
+            ))}
+        </div>
+      )
+    },
+    {
+      header: 'Requirement Types',
+      key: 'requirementTypes',
+      render: (site: any) => (
+        <div className="flex flex-wrap gap-1">
+          {(site.requirementTypes || []).length === 0
+            ? <span className="text-xs text-slate-400">—</span>
+            : (site.requirementTypes || []).map((rt: any, i: number) => (
+              <span key={i} className="text-[10px] font-semibold px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md border border-indigo-100">
+                {typeof rt === 'object' ? rt.name : rt}
+              </span>
+            ))}
+        </div>
       )
     },
     {
@@ -321,7 +359,6 @@ export default function SitesPage() {
 
   return (
     <div className="mx-auto space-y-4 pb-20 px-6 pt-5">
-      {/* High-Density Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-4">
         <div className="flex items-center gap-4">
           <div>
@@ -367,20 +404,7 @@ export default function SitesPage() {
                 toast.error(`You have reached your limit of ${siteLimit} sites. Please upgrade your plan.`);
                 return;
               }
-              setFormData({
-                name: '',
-                city: '',
-                area: '',
-                description: '',
-                propertyTypes: '',
-                priceRange: '',
-                whatsappNumber: '',
-                staff: '',
-                teamId: '',
-                status: 'Planning',
-                images: [],
-                originalImages: []
-              });
+              setFormData(emptyForm);
               setIsModalOpen(true);
             }}
             className={cn(
@@ -414,7 +438,6 @@ export default function SitesPage() {
         onPageChange={(page) => dispatch(fetchSites({ page, limit: pagination.limit, search: searchTerm }))}
       />
 
-      {/* New/Edit Site Modal */}
       <SiteModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -427,9 +450,16 @@ export default function SitesPage() {
         }))}
         mockStaff={staffDropdown}
         mockTeams={teams}
+        requirementTypes={requirementTypes}
+        propertyTypes={propertyTypes}
+        budgets={budgets}
+        cities={cities}
+        areas={areas}
+        onCityChange={handleCityChange}
+        onAddCityArea={handleAddCityArea}
+        onAddBudget={handleAddBudget}
       />
 
-      {/* View Site Details Modal */}
       <AnimatePresence>
         {isViewModalOpen && selectedSite && (
           <>
@@ -498,11 +528,13 @@ export default function SitesPage() {
                       <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Property Types</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {selectedSite.propertyTypes.split(',').map((type: string, i: number) => (
-                        <span key={i} className="px-3 py-1.5 bg-slate-50 text-slate-900 text-[10px] font-black rounded-xl border border-slate-100 uppercase tracking-widest">
-                          {type.trim()}
-                        </span>
-                      ))}
+                      {(selectedSite.propertyTypes || []).length === 0
+                        ? <span className="text-xs text-slate-400">—</span>
+                        : (selectedSite.propertyTypes || []).map((pt: any, i: number) => (
+                          <span key={i} className="px-3 py-1.5 bg-amber-50 text-amber-700 text-[10px] font-black rounded-xl border border-amber-100 uppercase tracking-widest">
+                            {typeof pt === 'object' ? pt.name : pt}
+                          </span>
+                        ))}
                     </div>
                   </div>
 
