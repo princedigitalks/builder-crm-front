@@ -94,12 +94,15 @@ export default function LeadsPage() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Filter states
+  const [activeTab, setActiveTab] = useState<'all' | 'my' | 'team'>('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState({
     status: 'all',
     source: 'all',
     agent: 'all'
   });
+
+  const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -116,9 +119,10 @@ export default function LeadsPage() {
       search: debouncedSearch,
       status: filters.status !== 'all' ? filters.status : undefined,
       source: filters.source !== 'all' ? filters.source : undefined,
-      agent: filters.agent !== 'all' ? filters.agent : undefined
+      agent: filters.agent !== 'all' ? filters.agent : undefined,
+      filterType: activeTab !== 'all' ? activeTab : (user?.role === 'STAFF' ? 'all' : undefined)
     }));
-  }, [dispatch, currentPage, debouncedSearch, filters]);
+  }, [dispatch, currentPage, debouncedSearch, filters, activeTab, user]);
 
   useEffect(() => {
     dispatch(fetchLeadStatuses());
@@ -538,13 +542,39 @@ export default function LeadsPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl w-fit">
-            <button className="px-6 py-2 bg-white text-slate-900 shadow-sm rounded-xl text-sm font-bold transition-all">All Leads</button>
-            {/* <button className="px-6 py-2 text-slate-500 hover:text-slate-900 rounded-xl text-sm font-bold transition-all">My Leads</button> */}
-            {/* <button className="px-6 py-2 text-slate-500 hover:text-slate-900 rounded-xl text-sm font-bold transition-all">Unassigned</button> */}
-          </div>
+          {user?.role === 'STAFF' && (
+            <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl w-fit">
+              <button 
+                onClick={() => setActiveTab('all')}
+                className={cn(
+                  "px-4 md:px-6 py-2 rounded-xl text-sm font-bold transition-all",
+                  activeTab === 'all' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                )}
+              >
+                All
+              </button>
+              <button 
+                onClick={() => setActiveTab('my')}
+                className={cn(
+                  "px-4 md:px-6 py-2 rounded-xl text-sm font-bold transition-all",
+                  activeTab === 'my' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                )}
+              >
+                My Leads
+              </button>
+              <button 
+                onClick={() => setActiveTab('team')}
+                className={cn(
+                  "px-4 md:px-6 py-2 rounded-xl text-sm font-bold transition-all",
+                  activeTab === 'team' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                )}
+              >
+                Team Leads
+              </button>
+            </div>
+          )}
 
-          <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden md:block" />
+          {user?.role === 'STAFF' && <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden md:block" />}
 
           <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
             <button   

@@ -59,12 +59,12 @@ export default function LeadModal({
         siteId: '',
         source: 'WhatsApp',
         budget: '',
-        stageId: '',
+        stageId: leadStatuses.length > 0 ? leadStatuses[0]._id : '',
         agentId: '',
         notes: ''
       });
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, leadStatuses]);
 
   // Fetch team members when site changes and auto-select team leader
   useEffect(() => {

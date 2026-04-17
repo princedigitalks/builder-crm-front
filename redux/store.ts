@@ -11,6 +11,7 @@ import requirementTypeReducer from './slices/requirementTypeSlice';
 import propertyTypeReducer from './slices/propertyTypeSlice';
 import cityAreaReducer from './slices/cityAreaSlice';
 import budgetReducer from './slices/budgetSlice';
+import notificationReducer from './slices/notificationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +27,7 @@ export const store = configureStore({
     propertyType: propertyTypeReducer,
     cityArea: cityAreaReducer,
     budget: budgetReducer,
+    notification: notificationReducer,
   },
 });
 

@@ -73,13 +73,14 @@ const initialState: LeadState = {
 
 export const fetchLeads = createAsyncThunk(
   'lead/fetchLeads',
-  async ({ page = 1, limit = 10, search = '', status, source, agent }: {
+  async ({ page = 1, limit = 10, search = '', status, source, agent, filterType }: {
     page?: number,
     limit?: number,
     search?: string,
     status?: string,
     source?: string,
-    agent?: string
+    agent?: string,
+    filterType?: string
   }, { rejectWithValue }) => {
     try {
       const params = new URLSearchParams();
@@ -89,6 +90,7 @@ export const fetchLeads = createAsyncThunk(
       if (status) params.append('status', status);
       if (source) params.append('source', source);
       if (agent) params.append('agent', agent);
+      if (filterType) params.append('filterType', filterType);
 
       const response = await axios.get(`/lead?${params.toString()}`);
       return response.data;
