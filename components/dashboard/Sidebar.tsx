@@ -136,7 +136,7 @@ export default function Sidebar() {
         )}
 
         <div>
-          <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Core</p>
+          <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-2">crm</p>
           <div className="space-y-0.5">
             <SidebarItem icon={Users} label="Leads" href="/leads" badge={todayCounts.leads || undefined} />
             <SidebarItem icon={Bell} label="Reminders" href="/reminders" badge={todayCounts.reminders || undefined} />
@@ -148,7 +148,7 @@ export default function Sidebar() {
             <div>
               <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Projects</p>
               <div className="space-y-0.5">
-                <SidebarItem icon={Building2} label="Sites" href="/sites" />
+                <SidebarItem icon={Building2} label="Sites / Projects" href="/sites" />
               </div>
             </div>
 

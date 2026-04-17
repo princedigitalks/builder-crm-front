@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import CommonDialog from '@/components/ui/CommonDialog';
-import { Building2, MapPin, IndianRupee, Smartphone, GitMerge, UploadCloud, Trash2, Tag, Plus, X, Check } from 'lucide-react';
+import { Building2, MapPin, IndianRupee, Smartphone, GitMerge, UploadCloud, Trash2, Tag, Plus, X, Check, Video, FileText, Info } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { motion } from "framer-motion";
 import 'react-quill-new/dist/quill.snow.css';
@@ -112,6 +112,13 @@ export default function SiteModal({
     }
   };
 
+  const handleBrochureFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === 'application/pdf') {
+       setFormData({ ...formData, brochureFile: file });
+    }
+  };
+
   const removeImage = (index: number) => {
     const updatedImages = [...formData.images];
     if (updatedImages[index].preview) URL.revokeObjectURL(updatedImages[index].preview);
@@ -201,6 +208,19 @@ export default function SiteModal({
               icon={<MapPin size={14} />}
               disabled={!formData.city}
             />
+          </div>
+          <div className="col-span-2 space-y-1">
+            <label className={labelCls}>Detailed Address</label>
+            <div className="relative group">
+              <MapPin size={14} className="absolute left-4 top-3 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <textarea 
+                placeholder="Full address of the project site..." 
+                value={formData.address || ''}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                rows={2}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all resize-none" 
+              />
+            </div>
           </div>
 
           <div className="col-span-2 space-y-1">
@@ -340,6 +360,108 @@ export default function SiteModal({
               <option value="Planning">Planning</option>
               <option value="Active">Active</option>
             </select>
+          </div>
+
+          <div className="col-span-2 space-y-1">
+            <label className={labelCls}>YouTube Project Video</label>
+            <div className="relative group">
+              <Video size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <input type="text" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl || ''}
+                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all" />
+            </div>
+          </div>
+
+          <div className="col-span-2 space-y-2">
+            <label className={labelCls}>Project Brochure (PDF)</label>
+            <div className="flex flex-col gap-2">
+              {formData.brochureUrl && !formData.brochureFile && (
+                <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-indigo-600" />
+                    <span className="text-xs font-semibold text-indigo-700 truncate max-w-[200px]">Existing Brochure</span>
+                  </div>
+                  <a href={`${process.env.NEXT_PUBLIC_IMAGE_URL}${formData.brochureUrl}`} target="_blank" className="text-[10px] font-black uppercase text-indigo-600 hover:underline">View</a>
+                </div>
+              )}
+              {formData.brochureFile && (
+                <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <Check size={16} className="text-emerald-600" />
+                    <span className="text-xs font-semibold text-emerald-700 truncate max-w-[200px]">{formData.brochureFile.name}</span>
+                  </div>
+                  <button type="button" onClick={() => setFormData({ ...formData, brochureFile: null })} className="text-rose-500"><X size={14} /></button>
+                </div>
+              )}
+              <label className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 border-dashed rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                <input type="file" accept=".pdf" className="hidden" onChange={handleBrochureFileChange} />
+                <UploadCloud size={16} className="text-slate-400" />
+                <span className="text-sm text-slate-500">Upload new PDF brochure</span>
+              </label>
+              {!formData.brochureFile && !formData.brochureUrl && (
+                <div className="relative group mt-1">
+                   <FileText size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                   <input 
+                     type="text" 
+                     placeholder="Or paste external PDF URL..." 
+                     value={formData.brochureUrl || ''}
+                     onChange={(e) => setFormData({ ...formData, brochureUrl: e.target.value })}
+                     className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-indigo-400 transition-all"
+                   />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="col-span-2 space-y-2">
+            <label className={labelCls}>Amenities</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {(formData.amenities || []).map((amenity: string, idx: number) => (
+                <span key={idx} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold border border-indigo-100 group">
+                  {amenity}
+                  <button type="button" onClick={() => {
+                    const updated = [...formData.amenities];
+                    updated.splice(idx, 1);
+                    setFormData({ ...formData, amenities: updated });
+                  }} className="hover:text-rose-500 transition-colors">
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                id="amenity-input"
+                placeholder="Add amenity (e.g. Swimming Pool)" 
+                className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-indigo-400 transition-all"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const input = e.currentTarget;
+                    const val = input.value.trim();
+                    if (val && !(formData.amenities || []).includes(val)) {
+                      setFormData({ ...formData, amenities: [...(formData.amenities || []), val] });
+                      input.value = '';
+                    }
+                  }
+                }}
+              />
+              <button 
+                type="button"
+                onClick={() => {
+                  const input = document.getElementById('amenity-input') as HTMLInputElement;
+                  const val = input.value.trim();
+                  if (val && !(formData.amenities || []).includes(val)) {
+                    setFormData({ ...formData, amenities: [...(formData.amenities || []), val] });
+                    input.value = '';
+                  }
+                }}
+                className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 transition-all"
+              >
+                Add
+              </button>
+            </div>
           </div>
 
           <div className="col-span-2 space-y-2 mt-2">

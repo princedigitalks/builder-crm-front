@@ -100,7 +100,8 @@ export default function LeadsPage() {
   const [filters, setFilters] = useState({
     status: 'all',
     source: 'all',
-    agent: 'all'
+    agent: 'all',
+    site: 'all'
   });
 
   const { user } = useSelector((state: RootState) => state.auth);
@@ -121,6 +122,7 @@ export default function LeadsPage() {
       status: filters.status !== 'all' ? filters.status : undefined,
       source: filters.source !== 'all' ? filters.source : undefined,
       agent: filters.agent !== 'all' ? filters.agent : undefined,
+      site: filters.site !== 'all' ? filters.site : undefined,
       filterType: activeTab !== 'all' ? activeTab : (user?.role === 'STAFF' ? 'all' : undefined)
     }));
   }, [dispatch, currentPage, debouncedSearch, filters, activeTab, user]);
@@ -605,11 +607,11 @@ export default function LeadsPage() {
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={cn(
                 "p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2",
-                (filters.status !== 'all' || filters.source !== 'all' || filters.agent !== 'all') && "border-indigo-300 bg-indigo-50"
+                (filters.status !== 'all' || filters.source !== 'all' || filters.agent !== 'all' || filters.site !== 'all') && "border-indigo-300 bg-indigo-50"
               )}
             >
-              <Filter size={18} className={(filters.status !== 'all' || filters.source !== 'all' || filters.agent !== 'all') ? "text-indigo-600" : "text-slate-500"} />
-              {(filters.status !== 'all' || filters.source !== 'all' || filters.agent !== 'all') && (
+              <Filter size={18} className={(filters.status !== 'all' || filters.source !== 'all' || filters.agent !== 'all' || filters.site !== 'all') ? "text-indigo-600" : "text-slate-500"} />
+              {(filters.status !== 'all' || filters.source !== 'all' || filters.agent !== 'all' || filters.site !== 'all') && (
                 <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
               )}
             </button>
@@ -620,7 +622,7 @@ export default function LeadsPage() {
                   <h3 className="text-sm font-bold text-slate-900">Filters</h3>
                   <button
                     onClick={() => {
-                      setFilters({ status: 'all', source: 'all', agent: 'all' });
+                      setFilters({ status: 'all', source: 'all', agent: 'all', site: 'all' });
                       setCurrentPage(1);
                     }}
                     className="text-xs text-slate-500 hover:text-slate-700 font-medium"
@@ -659,6 +661,21 @@ export default function LeadsPage() {
                       <option value="Website">Website</option>
                       <option value="Walk-in">Walk-in</option>
                       <option value="Referral">Referral</option>
+                    </select>
+                  </div>
+
+                  {/* Site Filter */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-2">Project Site</label>
+                    <select
+                      value={filters.site}
+                      onChange={(e) => setFilters(prev => ({ ...prev, site: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="all">All Sites</option>
+                      {sitesDropdown.map((site: any) => (
+                        <option key={site._id} value={site._id}>{site.name}</option>
+                      ))}
                     </select>
                   </div>
 

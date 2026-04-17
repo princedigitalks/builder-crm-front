@@ -35,6 +35,8 @@ const emptyForm = {
   status: 'Planning',
   images: [] as any[],
   originalImages: [] as any[],
+  brochureUrl: '',
+  brochureFile: null as File | null,
 };
 
 export default function SitesPage() {
@@ -100,11 +102,15 @@ export default function SitesPage() {
     try {
       const formDataToSend = new FormData();
 
-      const skipKeys = new Set(['images', 'originalImages', '_id', 'requirementTypes', 'propertyTypes', 'budgets']);
+      const skipKeys = new Set(['images', 'originalImages', '_id', 'requirementTypes', 'propertyTypes', 'budgets', 'brochureFile']);
       Object.keys(formData).forEach(key => {
         if (skipKeys.has(key)) return;
         formDataToSend.append(key, formData[key] ?? '');
       });
+
+      if (formData.brochureFile) {
+        formDataToSend.append('brochure', formData.brochureFile);
+      }
 
       (formData.requirementTypes || []).forEach((id: string) => {
         formDataToSend.append('requirementTypes', id);
