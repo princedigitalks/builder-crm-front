@@ -45,6 +45,7 @@ import ViewFollowupsModal from '@/components/modals/ViewFollowupsModal';
 import CommonTable from '@/components/ui/CommonTable';
 import LeadImportModal from '@/components/modals/LeadImportModal';
 import KanbanColumn from '@/components/leads/KanbanColumn';
+import { useRouter } from 'next/navigation';
 
 // Define Lead interface for TypeScript
 interface Lead {
@@ -103,6 +104,8 @@ export default function LeadsPage() {
     agent: 'all',
     site: 'all'
   });
+  const [kanbanRefreshKey, setKanbanRefreshKey] = useState(0);
+  const router = useRouter();
 
   const { user } = useSelector((state: RootState) => state.auth);
 
@@ -257,6 +260,13 @@ export default function LeadsPage() {
       render: (lead: any) => (
         <div className="flex items-center justify-end gap-1">
           <button
+            onClick={() => router.push(`/leads/${lead._id}`)}
+            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
+            title="View Lead Details"
+          >
+            <Eye size={14} />
+          </button>
+          <button
             onClick={() => handleOpenModal(lead)}
             className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
           >
@@ -322,15 +332,14 @@ export default function LeadsPage() {
   const handleDrop = async (e: React.DragEvent, stageId: string) => {
     e.preventDefault();
     const leadId = e.dataTransfer.getData('leadId');
+    if (!leadId) return;
 
-    // Find the status object by name
-    const statusObj = leadStatuses.find((s: any) => s.name === stageId);
-    if (statusObj) {
-      try {
-        await dispatch(updateLead({ id: leadId, data: { stageId: statusObj._id } })).unwrap();
-      } catch (error) {
-        console.error('Error updating lead stage:', error);
-      }
+    try {
+      await dispatch(updateLead({ id: leadId, data: { stageId } })).unwrap();
+      // Increment refresh key to force all columns to reload their data
+      setKanbanRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error updating lead stage:', error);
     }
   };
 
@@ -772,13 +781,15 @@ export default function LeadsPage() {
           >
             {leadStatuses.map((stage: any) => (
               <KanbanColumn
-                key={stage._id}
+                key={`${stage._id}-${kanbanRefreshKey}`}
                 stage={stage}
                 filters={filters}
                 activeTab={activeTab}
                 onEdit={handleOpenModal}
                 onDelete={handleDelete}
                 onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
                 onAddLead={handleOpenModalWithStatus}
                 onAddFollowup={handleOpenFollowupModal}
                 onViewFollowups={handleOpenViewFollowupsModal}

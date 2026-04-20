@@ -15,6 +15,8 @@ interface KanbanColumnProps {
   onEdit: (lead: any) => void;
   onDelete: (lead: any) => void;
   onDragStart: (e: React.DragEvent, leadId: string) => void;
+  onDrop: (e: React.DragEvent, stageId: string) => void;
+  onDragOver: (e: React.DragEvent) => void;
   onAddLead: (stageName: string) => void;
   onAddFollowup: (lead: any) => void;
   onViewFollowups: (lead: any) => void;
@@ -27,6 +29,8 @@ export default function KanbanColumn({
   onEdit,
   onDelete,
   onDragStart,
+  onDrop,
+  onDragOver,
   onAddLead,
   onAddFollowup,
   onViewFollowups
@@ -36,6 +40,7 @@ export default function KanbanColumn({
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const { user } = useSelector((state: RootState) => state.auth);
   
   const observer = useRef<IntersectionObserver | null>(null);
@@ -94,6 +99,21 @@ export default function KanbanColumn({
     }
   }, [page]);
 
+  const handleDragOverInternal = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+    onDragOver(e);
+  };
+
+  const handleDragLeaveInternal = (e: React.DragEvent) => {
+    setIsDragOver(false);
+  };
+
+  const handleDropInternal = (e: React.DragEvent) => {
+    setIsDragOver(false);
+    onDrop(e, stage._id);
+  };
+
   return (
     <div className="min-w-[300px] max-w-[300px] flex flex-col gap-4">
       <div className="flex items-center justify-between px-3">
@@ -112,18 +132,34 @@ export default function KanbanColumn({
         </button>
       </div>
 
-      <div className="flex-1 space-y-4 p-3 bg-slate-50 rounded-[2rem] border border-slate-100/50 min-h-[500px] overflow-y-auto max-h-[calc(100vh-250px)] scrollbar-hide">
+      <div 
+        onDragOver={handleDragOverInternal}
+        onDragLeave={handleDragLeaveInternal}
+        onDrop={handleDropInternal}
+        className={`flex-1 space-y-4 p-3 rounded-[2rem] border transition-all duration-300 min-h-[500px] overflow-y-auto max-h-[calc(100vh-250px)] scrollbar-hide ${
+          isDragOver 
+            ? "bg-indigo-50/50 border-indigo-200 shadow-inner" 
+            : "bg-slate-50 border-slate-100/50"
+        }`}
+      >
+        <AnimatePresence>
         {leads.map((lead, index) => (
           <div 
             key={lead._id} 
             ref={index === leads.length - 1 ? lastLeadElementRef : null}
           >
             <motion.div
+              layout
               layoutId={lead._id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               draggable
               onDragStart={(e: any) => onDragStart(e, lead._id)}
-              className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all cursor-grab active:cursor-grabbing group"
+              className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 cursor-grab active:cursor-grabbing group relative overflow-hidden"
             >
+              {/* Drag Indicator */}
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex justify-between items-start mb-2 relative">
                 <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{lead.name}</h4>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -197,6 +233,8 @@ export default function KanbanColumn({
           </div>
         ))}
         
+        </AnimatePresence>
+        
         {loading && (
           <div className="py-4 text-center">
             <Loader2 size={20} className="animate-spin text-indigo-500 mx-auto" />
@@ -204,8 +242,11 @@ export default function KanbanColumn({
         )}
 
         {leads.length === 0 && !loading && (
-          <div className="h-32 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center">
-            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No leads</p>
+          <div className="h-44 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center gap-2 bg-white/50">
+            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+               <Plus size={16} className="text-slate-300" />
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Drop Lead Here</p>
           </div>
         )}
       </div>

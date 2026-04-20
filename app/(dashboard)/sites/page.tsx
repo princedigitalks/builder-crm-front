@@ -38,8 +38,10 @@ const emptyForm = {
   images: [] as any[],
   originalImages: [] as any[],
   address: '',
+  mapUrl: '',
   amenities: [] as string[],
   videoUrl: '',
+  videoUrls: [] as string[],
   brochureUrl: '',
   brochureFile: null as File | null,
 };
@@ -97,6 +99,7 @@ export default function SitesPage() {
       budgets: (site.budgets || []).map((b: any) => typeof b === 'object' ? b._id : b),
       originalImages: [...(site.images || [])],
       images: [...(site.images || [])],
+      videoUrls: site.videoUrls || (site.videoUrl ? [site.videoUrl] : []),
       brochureFile: null,
     });
     if (site.city) dispatch(fetchAreasByCity(site.city));
@@ -122,7 +125,7 @@ export default function SitesPage() {
     setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
-      const skipKeys = new Set(['images', 'originalImages', '_id', 'requirementTypes', 'propertyTypes', 'budgets', 'brochureFile', 'amenities', 'builderId']);
+      const skipKeys = new Set(['images', 'originalImages', '_id', 'requirementTypes', 'propertyTypes', 'budgets', 'brochureFile', 'amenities', 'builderId', 'videoUrls']);
       
       Object.keys(formData).forEach(key => {
         if (skipKeys.has(key)) return;
@@ -134,6 +137,7 @@ export default function SitesPage() {
       (formData.propertyTypes || []).forEach((id: string) => formDataToSend.append('propertyTypes', id));
       (formData.budgets || []).forEach((id: string) => formDataToSend.append('budgets', id));
       (formData.amenities || []).forEach((val: string) => formDataToSend.append('amenities', val));
+      (formData.videoUrls || []).forEach((url: string) => { if (url.trim()) formDataToSend.append('videoUrls', url.trim()); });
 
       if (formData._id) {
         const currentImages = formData.images || [];

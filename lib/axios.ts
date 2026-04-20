@@ -25,6 +25,15 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('builder_token');
+        localStorage.removeItem('builder_user');
+        localStorage.removeItem('builder_info');
+        document.cookie = "builder_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        window.location.href = '/';
+      }
+    }
     return Promise.reject(error);
   }
 );

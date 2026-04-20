@@ -48,6 +48,13 @@ export default function PropertyViewPage() {
     return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
   };
 
+  const getEmbedUrls = () => {
+    const urls: string[] = site?.videoUrls?.length
+      ? site.videoUrls
+      : site?.videoUrl ? [site.videoUrl] : [];
+    return urls.map(getYoutubeEmbedUrl).filter(Boolean) as string[];
+  };
+
   useEffect(() => {
     if (!lightbox.open) return;
     const handler = (e: KeyboardEvent) => {
@@ -80,7 +87,7 @@ export default function PropertyViewPage() {
     </div>
   );
 
-  const embedUrl = getYoutubeEmbedUrl(site.videoUrl);
+  const embedUrls = site ? getEmbedUrls() : [];
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -113,7 +120,7 @@ export default function PropertyViewPage() {
             <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg ${site.status === 'Active' ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-950'}`}>
               Project Status: {site.status}
             </span>
-            {site.videoUrl && (
+        {site.videoUrls?.length > 0 && (
               <span className="text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest bg-white/10 backdrop-blur-md text-white border border-white/20 flex items-center gap-1.5">
                 <Video size={12} className="text-red-400" /> Visual Tour Available
               </span>
@@ -188,7 +195,7 @@ export default function PropertyViewPage() {
             )}
 
             {/* Video Section */}
-            {embedUrl && (
+            {embedUrls.length > 0 && (
               <section className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 overflow-hidden">
                 <div className="flex items-center gap-2 mb-6">
                   <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
@@ -196,13 +203,17 @@ export default function PropertyViewPage() {
                   </div>
                   <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">Cinematic Tour</h2>
                 </div>
-                <div className="aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-inner">
-                  <iframe
-                    src={embedUrl}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                <div className="space-y-6">
+                  {embedUrls.map((url, i) => (
+                    <div key={i} className="aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-inner">
+                      <iframe
+                        src={url}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ))}
                 </div>
               </section>
             )}
@@ -220,12 +231,23 @@ export default function PropertyViewPage() {
                 <p className="text-slate-600 text-sm leading-relaxed mb-4">
                   {site.address || `${site.area}, ${site.city}`}
                 </p>
-                <div 
-                   onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${site.address || ''} ${site.area} ${site.city}`)}`, '_blank')}
-                   className="flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 w-fit px-3 py-1.5 rounded-lg border border-indigo-100/50 cursor-pointer hover:bg-indigo-100/50 transition-all"
-                >
-                   <ZoomIn size={12} /> View on Google Maps
-                </div>
+                {site.mapUrl ? (
+                  <a
+                    href={site.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 w-fit px-3 py-1.5 rounded-lg border border-indigo-100/50 hover:bg-indigo-100/50 transition-all"
+                  >
+                    <ZoomIn size={12} /> View on Google Maps
+                  </a>
+                ) : (
+                  <div
+                    onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${site.address || ''} ${site.area} ${site.city}`)}`, '_blank')}
+                    className="flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50/50 w-fit px-3 py-1.5 rounded-lg border border-indigo-100/50 cursor-pointer hover:bg-indigo-100/50 transition-all"
+                  >
+                    <ZoomIn size={12} /> View on Google Maps
+                  </div>
+                )}
               </section>
 
               {/* Requirement Types */}

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import CommonDialog from '@/components/ui/CommonDialog';
-import { Building2, MapPin, IndianRupee, Smartphone, GitMerge, UploadCloud, Trash2, Tag, Plus, X, Check, Video, FileText } from 'lucide-react';
+import { Building2, MapPin, IndianRupee, Smartphone, GitMerge, UploadCloud, Trash2, Tag, Plus, X, Check, Video, FileText, Link } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { motion } from "framer-motion";
 import 'react-quill-new/dist/quill.snow.css';
@@ -226,6 +226,20 @@ export default function SiteModal({
           </div>
 
           <div className="col-span-2 space-y-1">
+            <label className={labelCls}>Google Maps Link</label>
+            <div className="relative group">
+              <Link size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <input
+                type="url"
+                placeholder="https://maps.google.com/..."
+                value={formData.mapUrl || ''}
+                onChange={(e) => setFormData({ ...formData, mapUrl: e.target.value })}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="col-span-2 space-y-1">
             <label className={labelCls}>Project Description</label>
             <div className="quill-wrapper rounded-xl overflow-hidden border border-slate-200 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all">
               <ReactQuill
@@ -364,14 +378,46 @@ export default function SiteModal({
             </select>
           </div>
 
-          <div className="col-span-2 space-y-1">
-            <label className={labelCls}>YouTube Project Video</label>
-            <div className="relative group">
-              <Video size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-              <input type="text" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl || ''}
-                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all" />
+          <div className="col-span-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className={labelCls}>YouTube Videos</label>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, videoUrls: [...(formData.videoUrls || []), ''] })}
+                className="flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
+              >
+                <Plus size={12} /> Add Link
+              </button>
             </div>
+            {(formData.videoUrls || []).length === 0 && (
+              <p className="text-xs text-slate-400 ml-1">No videos added yet.</p>
+            )}
+            {(formData.videoUrls || []).map((url: string, idx: number) => (
+              <div key={idx} className="relative group">
+                <Video size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={url}
+                  onChange={(e) => {
+                    const updated = [...(formData.videoUrls || [])];
+                    updated[idx] = e.target.value;
+                    setFormData({ ...formData, videoUrls: updated });
+                  }}
+                  className="w-full pl-10 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = (formData.videoUrls || []).filter((_: string, i: number) => i !== idx);
+                    setFormData({ ...formData, videoUrls: updated });
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
           </div>
 
           <div className="col-span-2 space-y-2">

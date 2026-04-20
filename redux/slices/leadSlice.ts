@@ -28,6 +28,9 @@ interface LeadState {
   };
   followups: any[];
   reminders: any[];
+  currentLead: any | null;
+  searchResults: any[];
+  searchLoading: boolean;
   reminderPagination: {
     totalRecords: number;
     currentPage: number;
@@ -55,6 +58,9 @@ const initialState: LeadState = {
   },
   followups: [],
   reminders: [],
+  currentLead: null,
+  searchResults: [],
+  searchLoading: false,
   reminderPagination: {
     totalRecords: 0,
     currentPage: 1,
@@ -70,6 +76,30 @@ const initialState: LeadState = {
   loading: false,
   error: null,
 };
+
+export const fetchLeadById = createAsyncThunk(
+  'lead/fetchLeadById',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/lead/${id}`);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch lead');
+    }
+  }
+);
+
+export const searchLeads = createAsyncThunk(
+  'lead/searchLeads',
+  async (query: string, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/lead/search?q=${encodeURIComponent(query)}`);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to search leads');
+    }
+  }
+);
 
 export const fetchLeads = createAsyncThunk(
   'lead/fetchLeads',
@@ -413,6 +443,23 @@ const leadSlice = createSlice({
           state.reminders[index].isSent = true;
           state.reminders[index].sentAt = new Date().toISOString();
         }
+      })
+      // Fetch Lead By Id
+      .addCase(fetchLeadById.pending, (state) => { state.loading = true; })
+      .addCase(fetchLeadById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentLead = action.payload;
+      })
+      .addCase(fetchLeadById.rejected, (state) => { state.loading = false; })
+      // Search Leads
+      .addCase(searchLeads.pending, (state) => { state.searchLoading = true; })
+      .addCase(searchLeads.fulfilled, (state, action) => {
+        state.searchLoading = false;
+        state.searchResults = action.payload;
+      })
+      .addCase(searchLeads.rejected, (state) => {
+        state.searchLoading = false;
+        state.searchResults = [];
       });
   },
 });
