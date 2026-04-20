@@ -73,14 +73,15 @@ const initialState: LeadState = {
 
 export const fetchLeads = createAsyncThunk(
   'lead/fetchLeads',
-  async ({ page = 1, limit = 10, search = '', status, source, agent, filterType }: {
+  async ({ page = 1, limit = 10, search = '', status, source, agent, filterType, site }: {
     page?: number,
     limit?: number,
     search?: string,
     status?: string,
     source?: string,
     agent?: string,
-    filterType?: string
+    filterType?: string,
+    site?: string
   }, { rejectWithValue }) => {
     try {
       const params = new URLSearchParams();
@@ -91,6 +92,7 @@ export const fetchLeads = createAsyncThunk(
       if (source) params.append('source', source);
       if (agent) params.append('agent', agent);
       if (filterType) params.append('filterType', filterType);
+      if (site) params.append('site', site);
 
       const response = await axios.get(`/lead?${params.toString()}`);
       return response.data;
@@ -235,13 +237,14 @@ export const deleteFollowup = createAsyncThunk(
 
 export const exportLeads = createAsyncThunk(
   'lead/exportLeads',
-  async (filters: { search?: string; status?: string; source?: string; agent?: string } = {}, { rejectWithValue }) => {
+  async (filters: { search?: string; status?: string; source?: string; agent?: string; site?: string } = {}, { rejectWithValue }) => {
     try {
       const params = new URLSearchParams();
       if (filters.search) params.append('search', filters.search);
       if (filters.status && filters.status !== 'all') params.append('status', filters.status);
       if (filters.source && filters.source !== 'all') params.append('source', filters.source);
       if (filters.agent && filters.agent !== 'all') params.append('agent', filters.agent);
+      if (filters.site && filters.site !== 'all') params.append('site', filters.site);
 
       const response = await axios.get(`/lead/export-excel?${params.toString()}`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
