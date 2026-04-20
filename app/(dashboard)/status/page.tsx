@@ -9,12 +9,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
 import { fetchStatuses, updateStatus, reorderStatuses, createStatus, deleteStatus } from '@/redux/slices/statusSlice';
 import { toast } from 'react-hot-toast';
+import ButtonLoader from '@/components/ui/ButtonLoader';
 
 export default function StatusPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { statuses, loading } = useSelector((state: RootState) => state.leadStatus);
   const [localStatuses, setLocalStatuses] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [saveOrderLoading, setSaveOrderLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [formData, setFormData] = useState({
     _id: '',
     name: '',
@@ -36,37 +40,29 @@ export default function StatusPage() {
   };
 
   const handleSaveOrder = async () => {
-    const orderings = localStatuses.map((s, idx) => ({
-      id: s._id,
-      order: idx + 1
-    }));
+    const orderings = localStatuses.map((s, idx) => ({ id: s._id, order: idx + 1 }));
     try {
+      setSaveOrderLoading(true);
       await dispatch(reorderStatuses(orderings)).unwrap();
       toast.success('Order Saved Successfully');
     } catch (err: any) {
       toast.error(err || 'Failed to reorder');
+    } finally {
+      setSaveOrderLoading(false);
     }
-  };
-
-  const handleEdit = (status: any) => {
-    setFormData({
-      _id: status._id,
-      name: status.name,
-      color: status.color
-    });
-    setIsModalOpen(true);
   };
 
   const handleDelete = async (id: string, key: string) => {
-    if (['NEW', 'WON', 'LOST'].includes(key)) {
-      return toast.error('System statuses cannot be deleted');
-    }
+    if (['NEW', 'WON', 'LOST'].includes(key)) return toast.error('System statuses cannot be deleted');
     if (confirm('Delete this status?')) {
       try {
+        setLoadingId(id);
         await dispatch(deleteStatus(id)).unwrap();
         toast.success('Status Deleted');
       } catch (err: any) {
         toast.error(err || 'Failed to delete');
+      } finally {
+        setLoadingId(null);
       }
     }
   };
@@ -74,6 +70,7 @@ export default function StatusPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setSubmitLoading(true);
       if (formData._id) {
         await dispatch(updateStatus({ id: formData._id, data: formData })).unwrap();
         toast.success('Status Updated');
@@ -84,6 +81,8 @@ export default function StatusPage() {
       setIsModalOpen(false);
     } catch (err: any) {
       toast.error(err || 'Failed to saveStatus');
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -157,19 +156,21 @@ export default function StatusPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <button 
+                       <ButtonLoader
+                        loading={false}
                         onClick={() => handleEdit(status)}
                         className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-100"
                       >
                         <Edit3 size={18} />
-                      </button>
+                      </ButtonLoader>
                       {status.key === 'CUSTOM' && (
-                        <button 
+                        <ButtonLoader
+                          loading={loadingId === status._id}
                           onClick={() => handleDelete(status._id, status.key)}
                           className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100"
                         >
                           <Trash2 size={18} />
-                        </button>
+                        </ButtonLoader>
                       )}
                     </div>
                   </td>
@@ -180,13 +181,14 @@ export default function StatusPage() {
         </div>
 
         <div className="p-6 bg-slate-50/30 border-t border-slate-50 flex justify-end gap-3">
-          <button 
+          <ButtonLoader
+            loading={saveOrderLoading}
             onClick={handleSaveOrder}
             className="px-8 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-2 active:scale-95"
           >
             <CheckCircle2 size={16} />
             Save Changes
-          </button>
+          </ButtonLoader>
         </div>
       </div>
 

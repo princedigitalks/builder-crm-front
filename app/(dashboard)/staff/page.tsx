@@ -25,8 +25,9 @@ import { AppDispatch, RootState } from '@/redux/store';
 import { fetchStaff, addStaff, updateStaff, deleteStaff } from '@/redux/slices/staffSlice';
 import { toast } from 'react-hot-toast';
 import { Edit2, Trash2, Key } from 'lucide-react';
+import ButtonLoader from '@/components/ui/ButtonLoader';
 
-const MemberCard = ({ member, onEdit, onDelete, onChangePassword, onStatusChange }: { member: any, onEdit: (m: any) => void, onDelete: (id: string) => void, onChangePassword: (m: any) => void, onStatusChange: (id: string, currentStatus: string) => void }) => (
+const MemberCard = ({ member, onEdit, onDelete, onChangePassword, onStatusChange, loadingId }: { member: any, onEdit: (m: any) => void, onDelete: (id: string) => void, onChangePassword: (m: any) => void, onStatusChange: (id: string, currentStatus: string) => void, loadingId: string | null }) => (
   <motion.div 
     whileHover={{ y: -2 }}
     className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col gap-4 relative overflow-hidden group"
@@ -130,6 +131,7 @@ export default function StaffPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const currentLimit = 6;
 
   // Debouncing logic
@@ -202,6 +204,7 @@ export default function StaffPage() {
   const handleStatusToggle = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
     try {
+      setLoadingId(id);
       const resultAction = await dispatch(updateStaff({ id, data: { status: newStatus } }));
       if (updateStaff.fulfilled.match(resultAction)) {
         toast.success(`Staff member ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`);
@@ -211,12 +214,15 @@ export default function StaffPage() {
       }
     } catch (err) {
       toast.error("An unexpected error occurred");
+    } finally {
+      setLoadingId(null);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this staff member?")) {
       try {
+        setLoadingId(id);
         const resultAction = await dispatch(deleteStaff(id));
         if (deleteStaff.fulfilled.match(resultAction)) {
           toast.success("Staff member deleted successfully!");
@@ -226,6 +232,8 @@ export default function StaffPage() {
         }
       } catch (err) {
         toast.error("An unexpected error occurred");
+      } finally {
+        setLoadingId(null);
       }
     }
   };
@@ -293,25 +301,28 @@ export default function StaffPage() {
       className: 'text-right',
       render: (item: any) => (
         <div className="flex items-center justify-end gap-1">
-          <button 
+          <ButtonLoader
+            loading={loadingId === item._id}
             onClick={() => handlePasswordChangeRequest(item)}
             className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-50 rounded-lg transition-all"
             title="Change Password"
           >
             <Key size={14} />
-          </button>
-          <button 
+          </ButtonLoader>
+          <ButtonLoader
+            loading={false}
             onClick={() => handleEdit(item)}
             className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
           >
             <Edit2 size={14} />
-          </button>
-          <button 
+          </ButtonLoader>
+          <ButtonLoader
+            loading={loadingId === item._id}
             onClick={() => handleDelete(item._id)}
             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all"
           >
             <Trash2 size={14} />
-          </button>
+          </ButtonLoader>
         </div>
       )
     }
@@ -385,6 +396,7 @@ export default function StaffPage() {
                 onDelete={handleDelete} 
                 onChangePassword={handlePasswordChangeRequest}
                 onStatusChange={handleStatusToggle}
+                loadingId={loadingId}
               />
             ))}
             

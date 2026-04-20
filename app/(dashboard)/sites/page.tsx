@@ -20,6 +20,7 @@ import { RootState, AppDispatch } from '@/redux/store';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { toast } from 'react-hot-toast';
+import ButtonLoader from '@/components/ui/ButtonLoader';
 
 
 
@@ -65,6 +66,7 @@ export default function SitesPage() {
   const [selectedSite, setSelectedSite] = useState<any>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -187,10 +189,13 @@ export default function SitesPage() {
 
     if (result.isConfirmed) {
       try {
+        setDeletingId(site._id);
         await dispatch(deleteSite(site._id)).unwrap();
         toast.success('Site deletion requested');
       } catch (error: any) {
         toast.error(error || 'Failed to request deletion');
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -353,13 +358,14 @@ export default function SitesPage() {
           >
             <Edit3 size={14} />
           </button>
-          <button
+          <ButtonLoader
+            loading={deletingId === site._id}
             onClick={() => handleDelete(site)}
             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all"
             title="Delete Site"
           >
             <Trash2 size={14} />
-          </button>
+          </ButtonLoader>
         </div>
       )
     }

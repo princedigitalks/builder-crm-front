@@ -21,6 +21,7 @@ import { AppDispatch, RootState } from '@/redux/store';
 import { fetchTeams, fetchStaffDropdown, createTeam, updateTeam, deleteTeam } from '@/redux/slices/teamSlice';
 import { toast } from 'react-hot-toast';
 import _ from 'lodash';
+import ButtonLoader from '@/components/ui/ButtonLoader';
 
 export default function TeamsPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -30,6 +31,8 @@ export default function TeamsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const ITEMS_PER_PAGE = 10;
 
   const [formData, setFormData] = useState({
@@ -75,10 +78,13 @@ export default function TeamsPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this team?')) {
       try {
+        setLoadingId(id);
         await dispatch(deleteTeam(id)).unwrap();
         toast.success('Team deleted successfully');
       } catch (err: any) {
         toast.error(err || 'Failed to delete team');
+      } finally {
+        setLoadingId(null);
       }
     }
   };
@@ -86,6 +92,7 @@ export default function TeamsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setSubmitLoading(true);
       if (formData._id) {
         await dispatch(updateTeam({ id: formData._id, data: formData })).unwrap();
         toast.success('Team updated successfully');
@@ -96,6 +103,8 @@ export default function TeamsPage() {
       setIsModalOpen(false);
     } catch (err: any) {
       toast.error(err || 'Failed to save team');
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -177,18 +186,20 @@ export default function TeamsPage() {
       className: 'text-right',
       render: (team: any) => (
         <div className="flex items-center justify-end gap-1">
-          <button 
+          <ButtonLoader
+            loading={false}
             onClick={() => handleEdit(team)}
             className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
           >
             <Edit3 size={14} />
-          </button>
-          <button 
+          </ButtonLoader>
+          <ButtonLoader
+            loading={loadingId === team._id}
             onClick={() => handleDelete(team._id)}
             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all"
           >
             <Trash2 size={14} />
-          </button>
+          </ButtonLoader>
         </div>
       )
     }

@@ -46,6 +46,7 @@ import CommonTable from '@/components/ui/CommonTable';
 import LeadImportModal from '@/components/modals/LeadImportModal';
 import KanbanColumn from '@/components/leads/KanbanColumn';
 import { useRouter } from 'next/navigation';
+import ButtonLoader from '@/components/ui/ButtonLoader';
 
 // Define Lead interface for TypeScript
 interface Lead {
@@ -87,6 +88,7 @@ export default function LeadsPage() {
   // Import/Export state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Followup related state
   const [isFollowupModalOpen, setIsFollowupModalOpen] = useState(false);
@@ -364,29 +366,13 @@ export default function LeadsPage() {
 
     if (result.isConfirmed) {
       try {
+        setDeletingId(lead._id);
         await dispatch(deleteLead(lead._id)).unwrap();
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Lead has been deleted successfully.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-          customClass: {
-            popup: 'rounded-2xl',
-            title: 'text-lg font-bold text-emerald-600'
-          }
-        });
+        Swal.fire({ title: 'Deleted!', text: 'Lead has been deleted successfully.', icon: 'success', timer: 2000, showConfirmButton: false, customClass: { popup: 'rounded-2xl', title: 'text-lg font-bold text-emerald-600' } });
       } catch (error) {
-        Swal.fire({
-          title: 'Error!',
-          text: 'Failed to delete lead. Please try again.',
-          icon: 'error',
-          confirmButtonColor: '#ef4444',
-          customClass: {
-            popup: 'rounded-2xl',
-            title: 'text-lg font-bold text-red-600'
-          }
-        });
+        Swal.fire({ title: 'Error!', text: 'Failed to delete lead. Please try again.', icon: 'error', confirmButtonColor: '#ef4444', customClass: { popup: 'rounded-2xl', title: 'text-lg font-bold text-red-600' } });
+      } finally {
+        setDeletingId(null);
       }
     }
   };
