@@ -52,6 +52,11 @@ export default function StatusPage() {
     }
   };
 
+  const handleEdit = (status: any) => {
+    setFormData({ _id: status._id, name: status.name, color: status.color });
+    setIsModalOpen(true);
+  };
+
   const handleDelete = async (id: string, key: string) => {
     if (['NEW', 'WON', 'LOST'].includes(key)) return toast.error('System statuses cannot be deleted');
     if (confirm('Delete this status?')) {
