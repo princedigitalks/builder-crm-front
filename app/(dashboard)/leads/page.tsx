@@ -308,13 +308,14 @@ export default function LeadsPage() {
                   <Eye size={14} />
                   View Followups
                 </button>
-                <button
+                <ButtonLoader
+                  loading={deletingId === lead._id}
                   onClick={() => { handleDelete(lead); setOpenDropdownId(null); }}
                   className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors rounded-b-xl"
                 >
                   <X size={14} />
                   Delete
-                </button>
+                </ButtonLoader>
               </div>
             )}
           </div>
@@ -706,14 +707,14 @@ export default function LeadsPage() {
               </div>
             )}
           </div>
-          <button
+          <ButtonLoader
+            loading={exporting}
             onClick={handleExport}
-            disabled={exporting}
-            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm disabled:opacity-60"
+            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
           >
             <Download size={16} />
             {exporting ? 'Exporting...' : 'Export'}
-          </button>
+          </ButtonLoader>
           <button
             onClick={() => setIsImportModalOpen(true)}
             className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
