@@ -2227,12 +2227,10 @@ export default function LandingPage() {
               {/* Bottom Copyright Section */}
               <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between text-[11px] text-gray-500">
                 <p>
-                  © 2025 BuildersCRM. All rights reserved. Made with ❤️ in
+                  © 2026 builders.in. All rights reserved. Made with ❤️ in
                   India.
                 </p>
                 <div className="flex gap-4 mt-4 md:mt-0">
-                  <span>Meta WhatsApp Official Partner</span>
-                  <span>ISO 27001 Certified</span>
                 </div>
               </div>
             </div>
