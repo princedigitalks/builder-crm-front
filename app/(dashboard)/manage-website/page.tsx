@@ -1,17 +1,20 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { Save, ExternalLink, Globe, Phone, Mail, FileText, Info, Facebook, Instagram, Linkedin, Twitter, Youtube, Share2, UploadCloud, X, Smartphone, Image as ImageIcon } from 'lucide-react';
 import axios from '@/lib/axios';
 import { toast } from 'react-hot-toast';
 
 export default function ManageWebsitePage() {
+  const dispatch = useDispatch();
   const { builder } = useSelector((state: RootState) => state.auth);
   const builderId = builder?._id;
 
   const [form, setForm] = useState({ 
+    companyName: '',
+    address: '',
     tagline: '', 
     heroSubtitle: '',
     about: '', 
@@ -41,9 +44,12 @@ export default function ManageWebsitePage() {
     if (!builderId) return;
     axios.get(`/builder/${builderId}/website`)
       .then(res => {
-        const wd = res.data.data?.websiteDetails || {};
+        const b = res.data.data || {};
+        const wd = b.websiteDetails || {};
         const sl = wd.socialLinks || {};
         setForm({
+          companyName: b.companyName || '',
+          address: b.address || '',
           tagline: wd.tagline || '',
           heroSubtitle: wd.heroSubtitle || '',
           about: wd.about || '',
@@ -105,6 +111,8 @@ export default function ManageWebsitePage() {
     setSaving(true);
     try {
       const formData = new FormData();
+      formData.append('companyName', form.companyName);
+      formData.append('address', form.address);
       formData.append('tagline', form.tagline);
       formData.append('heroSubtitle', form.heroSubtitle);
       formData.append('about', form.about);
@@ -131,8 +139,15 @@ export default function ManageWebsitePage() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      const updatedBuilder = res.data.data?.websiteDetails || {};
-      setForm(prev => ({ ...prev, logo: updatedBuilder.logo, heroImage: updatedBuilder.heroImage }));
+      const updatedData = res.data.data || {};
+      const wd = updatedData.websiteDetails || {};
+      
+      // Update Redux state so the sidebar and other components reflect the new company name immediately
+      import('@/redux/slices/authSlice').then(({ updateBuilder }) => {
+         dispatch(updateBuilder(updatedData));
+      });
+
+      setForm(prev => ({ ...prev, logo: wd.logo, heroImage: wd.heroImage }));
       setLogoFile(null);
       setHeroFile(null);
       setSaved(true);
@@ -152,7 +167,7 @@ export default function ManageWebsitePage() {
   );
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6 space-y-8">
+    <div className="max-w-6xl mx-auto py-12 px-6 space-y-8">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -194,8 +209,33 @@ export default function ManageWebsitePage() {
             </div>
             <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Visual Branding</span>
           </div>
-          
-          <div className="p-6 space-y-8">
+                    <div className="p-6 space-y-8">
+            {/* Company Info Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Company Name</label>
+                  <input
+                    name="companyName"
+                    value={form.companyName}
+                    onChange={handleChange}
+                    placeholder="e.g. Shantiniketan Group"
+                    className="w-full text-sm px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-slate-900"
+                  />
+               </div>
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Address</label>
+                  <input
+                    name="address"
+                    value={form.address}
+                    onChange={handleChange}
+                    placeholder="e.g. 101, Corporate Hub, Satellite"
+                    className="w-full text-sm px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-slate-900"
+                  />
+               </div>
+            </div>
+
+            <div className="h-px bg-slate-50" />
+
             {/* Logo & Hero Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                {/* Logo Upload */}

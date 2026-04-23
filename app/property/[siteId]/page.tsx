@@ -10,6 +10,7 @@ import {
 import axios from 'axios';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast, Toaster } from 'react-hot-toast';
+import { cn } from '@/lib/utils';
 
 /* ─── Hero Slider ─────────────────────────────────────────── */
 function HeroSlider({ images, siteName }: { images: string[]; siteName: string }) {
@@ -51,8 +52,7 @@ function HeroSlider({ images, siteName }: { images: string[]; siteName: string }
         />
       </AnimatePresence>
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-slate-900/20 to-transparent" />
+      {/* Gradient overlay - Removed as requested */}
 
       {/* Arrows */}
       {images.length > 1 && (
@@ -228,45 +228,74 @@ export default function PropertyViewPage() {
       <Toaster position="top-center" toastOptions={{ style: { borderRadius: '12px', fontSize: '14px' } }} />
 
       {/* Hero Slider */}
-      <div className="relative w-full h-[70vh] min-h-[480px]">
-        <HeroSlider images={allImages} siteName={site.name} />
-
-        {/* Back button */}
-        <div className="absolute top-5 left-5 z-20 flex items-center gap-2">
-          <button onClick={() => fromBuilder ? router.push(`/builder/${fromBuilder}`) : router.back()}
-            className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm border border-white/20 hover:bg-black/50 flex items-center justify-center text-white transition-all">
-            <ArrowLeft size={18} />
-          </button>
-          {site.builderId?.companyName && (
-            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm border border-white/20 rounded-full px-3 py-2">
-              <Building2 size={13} className="text-indigo-300" />
-              <span className="text-xs font-medium text-white">{site.builderId.companyName}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Hero text */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 max-w-5xl mx-auto px-6 pb-10">
-          <div className="flex flex-wrap gap-2 mb-3">
-            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${site.status === 'Active' ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-900'}`}>
-              {site.status}
-            </span>
-            {embedUrls.length > 0 && (
-              <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white border border-white/20 flex items-center gap-1.5">
-                <Video size={11} className="text-red-400" /> Video tour available
-              </span>
+      {/* Navigation Header */}
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-[50]">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => fromBuilder ? router.push(`/builder/${fromBuilder}`) : router.back()}
+              className="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-all border border-slate-200"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            {site.builderId?.companyName && (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                  <Building2 size={14} className="text-indigo-600" />
+                </div>
+                <span className="text-sm font-bold text-slate-800">{site.builderId.companyName}</span>
+              </div>
             )}
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white leading-tight mb-2">{site.name}</h1>
-          <div className="flex items-center gap-2 text-white/75 text-sm">
-            <MapPin size={15} className="text-indigo-300" />
-            <span>{site.area}, {site.city}</span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success('Link copied!'); }}
+              className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-100 transition-colors border border-slate-200">
+              <Share2 size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 pt-6">
+        {/* Hero Slider Container with Border Radius */}
+        <div className="relative w-full h-[50vh] min-h-[400px] rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/50">
+          <HeroSlider images={allImages} siteName={site.name} />
+          
+          <div className="absolute top-6 right-6 z-20 flex gap-2">
+            <span className={cn(
+              "text-[10px] font-black px-4 py-2 rounded-xl uppercase tracking-widest border shadow-lg backdrop-blur-md",
+              site.status === 'Active' ? "bg-emerald-500/90 text-white border-emerald-400" : "bg-amber-500/90 text-white border-amber-400"
+            )}>
+              {site.status === 'Active' ? 'Active' : 'Deactive'}
+            </span>
+          </div>
+        </div>
+
+        {/* Project Identity Section (Below Image) */}
+        <div className="mt-8 mb-4">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {embedUrls.length > 0 && (
+              <span className="text-[10px] font-black px-3 py-1.5 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center gap-1.5 uppercase tracking-widest">
+                <Video size={12} /> Video tour available
+              </span>
+            )}
+            {/* Movied Requirement Types here instead of separate section */}
+            {(site.requirementTypes || []).map((rt: any, i: number) => (
+              <span key={i} className="text-[10px] font-black px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 uppercase tracking-widest">
+                {rt.name}
+              </span>
+            ))}
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 leading-tight mb-4 tracking-tight">{site.name}</h1>
+          <div className="flex items-center gap-2 text-slate-500 bg-slate-100 w-fit px-4 py-2 rounded-2xl border border-slate-200/50">
+            <MapPin size={16} className="text-indigo-500" />
+            <span className="text-sm font-bold">{site.area}, {site.city}</span>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-20 space-y-8">
 
         {/* Quick Info Bar */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
@@ -428,7 +457,7 @@ export default function PropertyViewPage() {
             )}
 
             {/* Configs only */}
-            {site.requirementTypes?.length > 0 && (
+            {/* {site.requirementTypes?.length > 0 && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -442,7 +471,7 @@ export default function PropertyViewPage() {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Right sidebar */}
@@ -523,7 +552,7 @@ export default function PropertyViewPage() {
         {/* Footer */}
         <div className="pt-6 pb-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
           <span>© {new Date().getFullYear()} {site.builderId?.companyName}. All rights reserved.</span>
-          <span>Powered by BuildFlow CRM</span>
+          <span>Powered by builderscrm.in</span>
         </div>
       </div>
 

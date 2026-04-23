@@ -124,47 +124,6 @@ export default function DashboardOverview() {
         </motion.div>
       )}
 
-      {/* Plan Expiry Countdown Card (always visible) */}
-      {planExpiry && (
-        <div className={cn(
-          'flex items-center gap-4 px-4 py-3 rounded-xl border',
-          planExpiry.isExpired
-            ? 'bg-rose-50 border-rose-100'
-            : daysLeft <= 7
-              ? 'bg-rose-50 border-rose-100'
-              : daysLeft <= 30
-                ? 'bg-amber-50 border-amber-100'
-                : 'bg-emerald-50 border-emerald-100'
-        )}>
-          <div className={cn(
-            'p-2 rounded-lg',
-            planExpiry.isExpired ? 'bg-rose-100' : daysLeft <= 7 ? 'bg-rose-100' : daysLeft <= 30 ? 'bg-amber-100' : 'bg-emerald-100'
-          )}>
-            <Calendar size={18} className={cn(
-              planExpiry.isExpired ? 'text-rose-600' : daysLeft <= 7 ? 'text-rose-600' : daysLeft <= 30 ? 'text-amber-600' : 'text-emerald-600'
-            )} />
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Active Plan</p>
-            <p className="text-sm font-bold text-slate-800">{planExpiry.planName}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-              {planExpiry.isExpired ? 'Expired' : 'Expires in'}
-            </p>
-            <p className={cn(
-              'text-2xl font-black leading-none',
-              planExpiry.isExpired ? 'text-rose-600' : daysLeft <= 7 ? 'text-rose-600' : daysLeft <= 30 ? 'text-amber-600' : 'text-emerald-600'
-            )}>
-              {planExpiry.isExpired ? '0' : daysLeft}
-              <span className="text-xs font-semibold ml-1">{planExpiry.isExpired ? 'days ago' : 'days'}</span>
-            </p>
-            <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-              {new Date(planExpiry.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -307,6 +266,153 @@ export default function DashboardOverview() {
           )}
         </div>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Lead Source Distribution */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 flex flex-col items-center">
+          <h3 className="font-semibold text-slate-800 text-xs uppercase tracking-wider mb-8 self-start">Source Distribution</h3>
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* Large Circle Representation */}
+              <div className="relative w-56 h-56 flex-shrink-0 mb-10">
+                <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
+                  {stats?.sources?.map((s: any, i: number) => {
+                    const total = stats.totalLeads || 1;
+                    const percent = (s.count / total) * 100;
+                    const offset = stats.sources.slice(0, i).reduce((acc: number, curr: any) => acc + (curr.count / total) * 100, 0);
+                    return (
+                      <circle
+                        key={i}
+                        cx="18" cy="18" r="16"
+                        fill="transparent"
+                        stroke={['#6366f1', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#f43f5e'][i % 6]}
+                        strokeWidth="4.5"
+                        strokeDasharray={`${percent} ${100 - percent}`}
+                        strokeDashoffset={-offset}
+                        className="transition-all duration-1000"
+                      />
+                    );
+                  })}
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-4xl font-black text-slate-900 leading-none">{stats?.totalLeads}</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Total Leads</span>
+                </div>
+              </div>
+
+              <div className="w-full grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-slate-50">
+                {(stats?.sources || []).map((source: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                    <div className={cn("w-3 h-3 rounded-full shrink-0", FUNNEL_COLORS[i % FUNNEL_COLORS.length])} />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[11px] font-bold text-slate-700 truncate leading-tight">{source.label}</span>
+                      <span className="text-[10px] font-black text-indigo-600">{Math.round((source.count / (stats?.totalLeads || 1)) * 100)}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Staff Performance - Scalable List */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8">
+          <h3 className="font-semibold text-slate-800 text-xs uppercase tracking-wider mb-8">Team Productivity</h3>
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-12 bg-slate-50 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+              {(stats?.staffStats || []).map((staff: any, i: number) => {
+                const total = stats.totalLeads || 1;
+                const percent = (staff.count / total) * 100;
+                return (
+                  <div key={i} className="group p-3 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-[10px] font-black text-slate-400 group-hover:text-indigo-600 border border-slate-100 transition-colors">
+                           {staff.label.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                         </div>
+                         <span className="text-xs font-bold text-slate-700">{staff.label}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-black text-slate-900">{staff.count} <span className="text-[10px] text-slate-400 font-bold ml-0.5">Leads</span></span>
+                        <span className="text-[10px] font-black text-indigo-500 w-8 text-right">{Math.round(percent)}%</span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percent}%` }}
+                        transition={{ duration: 1, delay: i * 0.05 }}
+                        className="h-full bg-indigo-500 rounded-full"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              {stats?.staffStats?.length === 0 && (
+                <div className="py-20 text-center">
+                   <Users size={32} className="mx-auto text-slate-200 mb-4" />
+                   <p className="text-xs font-medium text-slate-400 italic">No productivity data</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Plan Expiry - Small Floating Widget at Bottom Right */}
+      {planExpiry && (
+        <div className="fixed bottom-6 right-6 z-40">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className={cn(
+              'flex items-center gap-4 px-4 py-3 rounded-2xl border shadow-xl backdrop-blur-md',
+              planExpiry.isExpired ? 'bg-rose-50/90 border-rose-100' : daysLeft <= 7 ? 'bg-rose-50/90 border-rose-100' : daysLeft <= 30 ? 'bg-amber-50/90 border-amber-100' : 'bg-white/90 border-slate-100'
+            )}
+          >
+            <div className={cn(
+              'p-2 rounded-xl',
+              planExpiry.isExpired ? 'bg-rose-100' : daysLeft <= 7 ? 'bg-rose-100' : daysLeft <= 30 ? 'bg-amber-100' : 'bg-indigo-50'
+            )}>
+              <Calendar size={18} className={cn(
+                planExpiry.isExpired ? 'text-rose-600' : daysLeft <= 7 ? 'text-rose-600' : daysLeft <= 30 ? 'text-amber-600' : 'text-indigo-600'
+              )} />
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                {planExpiry.isExpired ? 'Expired Plan' : 'Active Plan'}
+              </p>
+              <p className="text-xs font-bold text-slate-800 leading-none mb-1.5">{planExpiry.planName}</p>
+              <div className="flex items-center gap-2">
+                <p className={cn(
+                  'text-lg font-black leading-none tracking-tighter',
+                  planExpiry.isExpired ? 'text-rose-600' : daysLeft <= 7 ? 'text-rose-600' : daysLeft <= 30 ? 'text-amber-600' : 'text-indigo-600'
+                )}>
+                  {planExpiry.isExpired ? '0' : daysLeft}
+                  <span className="text-[10px] font-bold ml-1 uppercase">{planExpiry.isExpired ? 'Days' : 'Days left'}</span>
+                </p>
+              </div>
+            </div>
+            <div className="h-8 w-px bg-slate-100 mx-1" />
+            <div className="text-right">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Expires</p>
+              <p className="text-[10px] text-slate-700 font-black">
+                {new Date(planExpiry.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 }

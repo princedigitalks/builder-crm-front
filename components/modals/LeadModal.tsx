@@ -15,6 +15,7 @@ interface LeadModalProps {
   initialData?: any;
   leadStatuses?: any[];
   sitesDropdown?: any[];
+  staffDropdown?: any[];
 }
 
 export default function LeadModal({
@@ -24,7 +25,8 @@ export default function LeadModal({
   loading = false,
   initialData = null,
   leadStatuses = [],
-  sitesDropdown = []
+  sitesDropdown = [],
+  staffDropdown = []
 }: LeadModalProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { siteTeamMembers } = useSelector((state: RootState) => state.lead);
@@ -44,14 +46,24 @@ export default function LeadModal({
     if (!isOpen) return;
 
     if (initialData) {
+      // Handle potential populated objects or different field names from API
+      const siteId = (typeof initialData.siteId === 'object' ? initialData.siteId?._id : initialData.siteId) 
+                    || (typeof initialData.site === 'object' ? initialData.site?._id : null);
+      
+      const stageId = (typeof initialData.stageId === 'object' ? initialData.stageId?._id : initialData.stageId)
+                     || (typeof initialData.stage === 'object' ? initialData.stage?._id : (initialData.stage || null));
+
+      const agentId = (typeof initialData.agentId === 'object' ? initialData.agentId?._id : initialData.agentId)
+                     || (typeof initialData.agent === 'object' ? initialData.agent?._id : null);
+
       setFormData({
         name: initialData.name || '',
         phone: initialData.phone || '',
-        siteId: initialData.siteId || '',
+        siteId: siteId || '',
         source: initialData.source || 'WhatsApp',
         budget: initialData.budget || '',
-        stageId: initialData.stageId || '',
-        agentId: initialData.agentId || '',
+        stageId: stageId || '',
+        agentId: agentId || '',
         notes: initialData.notes || ''
       });
     } else {
@@ -206,16 +218,26 @@ export default function LeadModal({
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
               >
                 <option value="">Unassigned</option>
-                {siteTeamMembers.leader && (
-                  <option key={siteTeamMembers.leader._id} value={siteTeamMembers.leader._id}>
-                    {siteTeamMembers.leader.name} (Team Leader)
-                  </option>
-                )}
-                {siteTeamMembers.members.map(member => (
-                  <option key={member._id} value={member._id}>
-                    {member.name} (Team Member)
-                  </option>
-                ))}
+                <optgroup label="Site Team">
+                  {siteTeamMembers.leader && (
+                    <option key={siteTeamMembers.leader._id} value={siteTeamMembers.leader._id}>
+                      {siteTeamMembers.leader.name} (Team Leader)
+                    </option>
+                  )}
+                  {siteTeamMembers.members.map(member => (
+                    <option key={member._id} value={member._id}>
+                      {member.name} (Team Member)
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Other Staff">
+                  {staffDropdown.filter(s => 
+                    s._id !== siteTeamMembers.leader?._id && 
+                    !siteTeamMembers.members.find(m => m._id === s._id)
+                  ).map(staff => (
+                    <option key={staff._id} value={staff._id}>{staff.name}</option>
+                  ))}
+                </optgroup>
               </select>
             </div>
           </div>

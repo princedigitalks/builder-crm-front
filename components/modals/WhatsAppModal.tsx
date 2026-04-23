@@ -72,7 +72,7 @@ export default function WhatsAppModal({
     <CommonDialog 
       isOpen={isOpen} 
       onClose={onClose} 
-      title={initialData ? "Edit WhatsApp Hub" : "Connect WhatsApp Hub"} 
+      title={initialData ? "Edit WhatsApp Number" : "Connect WhatsApp Number"} 
       maxWidth="max-w-xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -130,7 +130,7 @@ export default function WhatsAppModal({
             ) : (
               <>
                 <CheckCircle2 size={16} />
-                {initialData ? 'Update Hub' : 'Connect Hub'}
+                {initialData ? 'Update Number' : 'Connect Number'}
               </>
             )}
           </button>

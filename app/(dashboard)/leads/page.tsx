@@ -795,6 +795,7 @@ export default function LeadsPage() {
         initialData={editingLead}
         leadStatuses={leadStatuses}
         sitesDropdown={sitesDropdown}
+        staffDropdown={staffDropdown}
       />
 
       {/* Add Followup Modal */}

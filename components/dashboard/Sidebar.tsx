@@ -47,7 +47,7 @@ const SidebarItem = ({
       )}
     >
       <Icon size={16} className={cn(active ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600")} />
-      <span className="text-xs font-medium">{label}</span>
+      <span className="text-sm font-medium">{label}</span>
       {badge && (
         <span className={cn(
           "ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-semibold",
@@ -115,12 +115,10 @@ export default function Sidebar() {
     <aside className="w-56 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50">
       <div className="p-4 border-b border-slate-50">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm shadow-md shadow-indigo-100">
-            BF
-          </div>
+          <img src="/favicon.png" alt="Logo" className="w-8 h-8 rounded-lg object-contain shadow-md shadow-indigo-100" />
           <div className="min-w-0 flex-1">
-            <h1 className="font-semibold text-slate-900 leading-tight text-sm">BuildFlow</h1>
-            <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded block truncate">
+            <h1 className="font-semibold text-slate-900 leading-tight text-sm">builderscrm.in</h1>
+            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded block truncate">
               {company}
             </span>
           </div>
@@ -130,13 +128,13 @@ export default function Sidebar() {
       <nav className="flex-1 p-3 space-y-6 overflow-y-auto custom-scrollbar">
         {mounted && user?.role && user.role !== 'STAFF' && (
           <div>
-            <p className="px-3 text-[9px] font-bold text-slate-400 mb-2">Overview</p>
+            <p className="px-3 text-[11px] font-bold text-slate-400 mb-2">Overview</p>
             <SidebarItem icon={LayoutDashboard} label="Dashboard" href="/dashboard" />
           </div>
         )}
 
         <div>
-          <p className="px-3 text-[9px] font-bold text-slate-400 mb-2">CRM</p>
+          <p className="px-3 text-[11px] font-bold text-slate-400 mb-2">CRM</p>
           <div className="space-y-0.5">
             <SidebarItem icon={Users} label="Leads" href="/leads" badge={todayCounts.leads || undefined} />
             <SidebarItem icon={Bell} label="Reminders" href="/reminders" badge={todayCounts.reminders || undefined} />
@@ -146,21 +144,21 @@ export default function Sidebar() {
         {mounted && user?.role && (user.role === 'BUILDER' || user.role === 'ADMIN') && (
           <>
             <div>
-              <p className="px-3 text-[9px] font-bold text-slate-400 mb-2">Projects</p>
+              <p className="px-3 text-[11px] font-bold text-slate-400 mb-2">Projects</p>
               <div className="space-y-0.5">
                 <SidebarItem icon={Building2} label="Sites / Projects" href="/sites" />
               </div>
             </div>
 
             <div>
-              <p className="px-3 text-[9px] font-bold text-slate-400 mb-2">Communication</p>
+              <p className="px-3 text-[11px] font-bold text-slate-400 mb-2">Communication</p>
               <div className="space-y-0.5">
                 <SidebarItem icon={MessageSquare} label="WhatsApp Numbers" href="/whatsapp" />
               </div>
             </div>
 
             <div>
-              <p className="px-3 text-[9px] font-bold text-slate-400 mb-2">Admin</p>
+              <p className="px-3 text-[11px] font-bold text-slate-400 mb-2">Admin</p>
               <div className="space-y-0.5">
                 <SidebarItem icon={Users2} label="Staff" href="/staff" />
                 <SidebarItem icon={GitMerge} label="Teams" href="/team" />
@@ -195,7 +193,7 @@ export default function Sidebar() {
             <p className="text-xs font-semibold text-slate-900 truncate">
               {mounted ? name : "User"}
             </p>
-            <p className="text-[9px] font-medium text-slate-500 truncate">
+            <p className="text-[10px] font-medium text-slate-500 truncate">
               {mounted
                 ? `${user?.role === 'STAFF' ? 'Staff' : 'Builder'}`
                 : "Builder"

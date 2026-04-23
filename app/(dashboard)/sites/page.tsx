@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, Search, MapPin, MoreVertical, Edit3, Trash2, Eye, LayoutGrid, IndianRupee, Info, Smartphone, User, GitMerge, Share2 } from 'lucide-react';
+import { Building2, Plus, Search, MapPin, MoreVertical, Edit3, Trash2, Eye, LayoutGrid, IndianRupee, Info, Smartphone, User, GitMerge, Share2, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { getSocket } from '@/lib/socket';
@@ -343,15 +343,17 @@ export default function SitesPage() {
             className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-slate-50 rounded-lg transition-all"
             title="Share on WhatsApp"
           >
-            <Smartphone size={14} />
+            <MessageCircle size={14} />
           </a>
-          <button
-            onClick={() => router.push(`/property/${site._id}`)}
-            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
+          <a
+            href={`/property/${site._id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all inline-flex items-center"
             title="View Public Page"
           >
             <Eye size={14} />
-          </button>
+          </a>
           <button
             onClick={() => handleEdit(site)}
             className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
@@ -410,6 +412,16 @@ export default function SitesPage() {
         </div>
         
         <div className="flex items-center gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => router.push('/manage-website')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all border border-slate-200 text-slate-600 hover:bg-slate-50"
+            title="Manage Company & Website"
+          >
+            <Globe size={14} />
+            Website Settings
+          </motion.button>
           <motion.button
             whileHover={mounted && !isLimitReached ? { scale: 1.02 } : {}}
             whileTap={mounted && !isLimitReached ? { scale: 0.98 } : {}}

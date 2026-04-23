@@ -158,7 +158,7 @@ const RegistrationModal = ({ isOpen, onClose, plan }: RegistrationModalProps) =>
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
         amount: orderData.order.amount,
         currency: orderData.order.currency,
-        name: 'BuildFlow CRM',
+        name: 'builderscrm.in',
         description: `${plan.planName} Subscription`,
         order_id: orderData.order.id,
         handler: async (paymentResponse: any) => {

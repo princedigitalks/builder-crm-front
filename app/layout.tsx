@@ -9,8 +9,11 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'BuildFlow CRM | Real Estate Management Platform',
+  title: 'builderscrm.in | Real Estate Management Platform',
   description: 'Empowering real estate builders with lead centralization, WhatsApp automation, and visual pipelines.',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 import { Providers } from '@/redux/Providers';

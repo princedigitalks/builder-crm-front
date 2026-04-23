@@ -69,7 +69,7 @@ export default function SubscriptionsPage() {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
         amount: orderRes.data.order.amount,
         currency: orderRes.data.order.currency,
-        name: "BuildFlow CRM",
+        name: "builderscrm.in",
         description: `Renewal for ${plan.planName} Plan`,
         order_id: orderRes.data.order.id,
         handler: async (response: any) => {
@@ -215,7 +215,7 @@ export default function SubscriptionsPage() {
                   <div className="bg-white rounded-2xl border border-slate-100 p-20 text-center flex flex-col items-center">
                      <Package size={48} className="text-slate-200 mb-4" />
                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-loose">
-                        No active subscription found.<br />Please upgrade to start using BuildFlow.
+                        No active subscription found.<br />Please upgrade to start using builderscrm.in.
                      </p>
                   </div>
                 ) : (

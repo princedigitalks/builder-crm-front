@@ -371,7 +371,7 @@ export default function SiteModal({
           </div>
 
           <div className="space-y-1">
-            <label className={labelCls}>WhatsApp Hub</label>
+            <label className={labelCls}>WhatsApp Number</label>
             <div className="relative group">
               <Smartphone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-indigo-500 transition-colors" />
               <select required value={formData.whatsappNumber}
@@ -469,7 +469,7 @@ export default function SiteModal({
               <label className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 border-dashed rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
                 <input type="file" accept=".pdf" className="hidden" onChange={handleBrochureFileChange} />
                 <UploadCloud size={16} className="text-slate-400" />
-                <span className="text-sm text-slate-500">Upload new PDF brochure</span>
+                <span className="text-sm text-slate-500">Upload brochure</span>
               </label>
               {!formData.brochureFile && !formData.brochureUrl && (
                 <div className="relative group mt-1">

@@ -291,7 +291,7 @@ export default function BuilderPublicPage() {
 
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
             <span>© {new Date().getFullYear()} {builder.companyName}. All rights reserved.</span>
-            <span>Powered by BuildFlow CRM</span>
+            <span>Powered by builderscrm.in</span>
           </div>
         </div>
       </footer>
