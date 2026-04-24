@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, Search, MapPin, MoreVertical, Edit3, Trash2, Eye, LayoutGrid, IndianRupee, Info, Smartphone, User, GitMerge, Share2, MessageCircle } from 'lucide-react';
+import { Building2, Plus, Search, MapPin, MoreVertical, Edit3, Trash2, Eye, LayoutGrid, IndianRupee, Info, Smartphone, User, GitMerge, Share2, MessageCircle, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { getSocket } from '@/lib/socket';
@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import SiteModal from '@/components/modals/SiteModal';
 import CommonTable from '@/components/ui/CommonTable';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchSites, createSite, updateSite, deleteSite, getSiteById, syncSiteStatus } from '@/redux/slices/siteSlice';
+import { fetchSites, createSite, updateSite, deleteSite, getSiteById } from '@/redux/slices/siteSlice';
 import { fetchTeams, fetchStaffDropdown } from '@/redux/slices/teamSlice';
 import { fetchWhatsapp } from '@/redux/slices/whatsappSlice';
 import { fetchRequirementTypes } from '@/redux/slices/requirementTypeSlice';
@@ -21,8 +21,6 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { toast } from 'react-hot-toast';
 import ButtonLoader from '@/components/ui/ButtonLoader';
-
-
 
 const emptyForm = {
   name: '',
@@ -57,7 +55,7 @@ export default function SitesPage() {
   const { propertyTypes } = useSelector((state: RootState) => state.propertyType);
   const { cities, areas } = useSelector((state: RootState) => state.cityArea);
   const { budgets } = useSelector((state: RootState) => state.budget);
-  const { user, builder } = useSelector((state: RootState) => state.auth);
+  const { builder } = useSelector((state: RootState) => state.auth);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<any>(emptyForm);
@@ -78,15 +76,6 @@ export default function SitesPage() {
     dispatch(fetchPropertyTypes());
     dispatch(fetchCities());
     dispatch(fetchBudgets());
-
-    const socket = getSocket();
-    socket.on('site_status_update', (update: { siteId: string; whatsappStatus: string; chatbotStatus: string }) => {
-      dispatch(syncSiteStatus(update));
-    });
-
-    return () => {
-      socket.off('site_status_update');
-    };
   }, [dispatch, searchTerm]);
 
   const siteLimit = builder?.currentLimits?.noOfSites || 0;
@@ -163,15 +152,10 @@ export default function SitesPage() {
     }
   };
 
-  const handleView = (site: any) => {
-    setSelectedSite(site);
-    setIsViewModalOpen(true);
-  };
-
   const handleDelete = async (site: any) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
-      text: `Do you want to delete "${site.name}"? This will notify the admin to unlink services.`,
+      text: `Do you want to delete "${site.name}"? This project will be removed from your portfolio.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
@@ -191,9 +175,9 @@ export default function SitesPage() {
       try {
         setDeletingId(site._id);
         await dispatch(deleteSite(site._id)).unwrap();
-        toast.success('Site deletion requested');
+        toast.success('Site deleted successfully');
       } catch (error: any) {
-        toast.error(error || 'Failed to request deletion');
+        toast.error(error || 'Failed to delete project');
       } finally {
         setDeletingId(null);
       }
@@ -211,7 +195,6 @@ export default function SitesPage() {
           </div>
           <div>
             <span className="font-semibold text-slate-900 text-sm block">{site.name}</span>
-            {/* <span className="text-xs text-slate-400 truncate max-w-[200px] block">{site.description}</span> */}
           </div>
         </div>
       )
@@ -260,33 +243,13 @@ export default function SitesPage() {
       )
     },
     {
-      header: 'Connection Health',
-      key: 'whatsappStatus',
+      header: 'Linked Number',
+      key: 'whatsappNumber',
       render: (site: any) => (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1.5 text-indigo-600">
-             <Smartphone size={12} />
-             <span className="text-sm">{site.whatsappNumber?.split(' (')[0] || 'N/A'}</span>
-          </div>
-          <span className={cn(
-            "text-xs font-medium px-2 py-0.5 rounded-full w-fit",
-            site.whatsappStatus === 'connected' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-          )}>
-            {site.whatsappStatus || 'disconnected'}
-          </span>
-       </div>
-      )
-    },
-    {
-      header: 'Chatbot Engine',
-      key: 'chatbotStatus',
-      render: (site: any) => (
-        <span className={cn(
-          "text-xs font-medium px-2 py-0.5 rounded-lg border",
-          site.chatbotStatus === 'active' ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-400 border-slate-100"
-        )}>
-          {site.chatbotStatus === 'active' ? 'Active' : 'Inactive'}
-        </span>
+        <div className="flex items-center gap-1.5 text-indigo-600 font-medium text-sm">
+           <Smartphone size={12} />
+           {site.whatsappNumber?.split(' (')[0] || '—'}
+        </div>
       )
     },
     {
@@ -379,10 +342,6 @@ export default function SitesPage() {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">Project Portfolio</h1>
-            {/* <p className="text-xs text-slate-400 flex items-center gap-2">
-              <LayoutGrid size={12} className="text-indigo-500" />
-              Site & Inventory Management
-            </p> */}
           </div>
           
           <div className="h-8 w-px bg-slate-100 mx-2" />

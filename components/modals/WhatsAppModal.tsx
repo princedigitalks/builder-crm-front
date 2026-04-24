@@ -96,7 +96,10 @@ export default function WhatsAppModal({
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-500 ml-1">WhatsApp Business Number</label>
             <div className="relative group">
-              <Phone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-2 border-r border-slate-200 z-10 pointer-events-none">
+                <Phone size={14} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">+91</span>
+              </div>
               <input 
                 required
                 name="number"
@@ -105,7 +108,7 @@ export default function WhatsAppModal({
                 maxLength={10}
                 value={formData.number}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-400 transition-all placeholder:text-slate-300" 
+                className="w-full pl-[4.5rem] pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-400 transition-all placeholder:text-slate-300" 
               />
             </div>
           </div>

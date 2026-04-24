@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import LeadModal from '@/components/modals/LeadModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
-import { fetchNotifications, markNotificationRead, addNotification } from '@/redux/slices/notificationSlice';
+import { fetchNotifications, markNotificationRead, markAllNotificationsRead, addNotification } from '@/redux/slices/notificationSlice';
 import { searchLeads } from '@/redux/slices/leadSlice';
 import { getSocket } from '@/lib/socket';
 import { formatDistanceToNow } from 'date-fns';
@@ -228,7 +228,17 @@ export default function Topbar() {
                   >
                     <div className="p-4 border-b border-slate-50 flex items-center justify-between">
                       <h3 className="text-sm font-bold text-slate-900">Notifications</h3>
-                      <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{unreadCount} New</span>
+                      <div className="flex items-center gap-3">
+                        {unreadCount > 0 && (
+                          <button 
+                            onClick={() => dispatch(markAllNotificationsRead())}
+                            className="text-[10px] font-bold text-indigo-600 hover:underline"
+                          >
+                            Mark all as read
+                          </button>
+                        )}
+                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{unreadCount} New</span>
+                      </div>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.length === 0 ? (

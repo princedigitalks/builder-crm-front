@@ -7,6 +7,9 @@ interface Whatsapp {
   name: string;
   number: string;
   isActive: boolean;
+  whatsappStatus?: 'connected' | 'disconnected';
+  chatbotStatus?: 'active' | 'inactive';
+  deleteRequested?: boolean;
   createdAt: string;
 }
 
@@ -121,7 +124,19 @@ export const deleteWhatsapp = createAsyncThunk(
 const whatsappSlice = createSlice({
   name: 'whatsapp',
   initialState,
-  reducers: {},
+  reducers: {
+    syncStatusUpdate: (state, action: { payload: { whatsappId: string; whatsappStatus: string; chatbotStatus: string } }) => {
+      const { whatsappId, whatsappStatus, chatbotStatus } = action.payload;
+      const index = state.whatsappList.findIndex(w => w._id === whatsappId);
+      if (index !== -1) {
+        state.whatsappList[index] = {
+          ...state.whatsappList[index],
+          whatsappStatus: whatsappStatus as any,
+          chatbotStatus: chatbotStatus as any
+        };
+      }
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchWhatsapp.pending, (state) => {
@@ -169,4 +184,5 @@ const whatsappSlice = createSlice({
   },
 });
 
+export const { syncStatusUpdate } = whatsappSlice.actions;
 export default whatsappSlice.reducer;

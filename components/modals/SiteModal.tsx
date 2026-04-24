@@ -371,18 +371,6 @@ export default function SiteModal({
           </div>
 
           <div className="space-y-1">
-            <label className={labelCls}>WhatsApp Number</label>
-            <div className="relative group">
-              <Smartphone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-indigo-500 transition-colors" />
-              <select required value={formData.whatsappNumber}
-                onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })} className={selectCls}>
-                <option value="">Link Number</option>
-                {mockWhatsAppNumbers.map(num => <option key={num.id} value={num.name}>{num.name}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="space-y-1">
             <label className={labelCls}>Assigned Team</label>
             <div className="relative group">
               <GitMerge size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-indigo-500 transition-colors" />
@@ -390,6 +378,18 @@ export default function SiteModal({
                 onChange={(e) => setFormData({ ...formData, teamId: e.target.value })} className={selectCls}>
                 <option value="">Select Team</option>
                 {mockTeams.map(team => <option key={team._id || team.id} value={team._id || team.id}>{team.teamName || team.name}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className={labelCls}>WhatsApp Number</label>
+            <div className="relative group">
+              <Smartphone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-indigo-500 transition-colors" />
+              <select required value={formData.whatsappNumber}
+                onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })} className={selectCls}>
+                <option value="">Link Number</option>
+                {mockWhatsAppNumbers.map(num => <option key={num.id} value={num.name}>{num.name}</option>)}
               </select>
             </div>
           </div>

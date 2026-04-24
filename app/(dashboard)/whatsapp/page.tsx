@@ -10,16 +10,20 @@ import {
   Edit3,
   Trash2,
   LayoutGridIcon,
-  List
+  List,
+  ToggleLeft as Toggle,
+  ToggleRight,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
-import { fetchWhatsapp, addWhatsapp, updateWhatsapp, deleteWhatsapp } from '@/redux/slices/whatsappSlice';
+import { fetchWhatsapp, addWhatsapp, updateWhatsapp, deleteWhatsapp, syncStatusUpdate } from '@/redux/slices/whatsappSlice';
 import { toast } from 'react-hot-toast';
 import WhatsAppModal from '@/components/modals/WhatsAppModal';
 import CommonTable from '@/components/ui/CommonTable';
+import { getSocket } from '@/lib/socket';
 
 const NumberCard = ({ num, onEdit, onDelete }: { num: any, onEdit: (n: any) => void, onDelete: (id: string) => void }) => (
   <motion.div 
@@ -55,16 +59,37 @@ const NumberCard = ({ num, onEdit, onDelete }: { num: any, onEdit: (n: any) => v
       </div>
     </div>
 
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
         <Phone size={12} className="text-slate-400 shrink-0" />
         <span className="tracking-wider">+91 {num.number}</span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">WhatsApp</p>
+          <span className={cn(
+            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase",
+            num.whatsappStatus === 'connected' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+          )}>
+            {num.whatsappStatus || 'disconnected'}
+          </span>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Chatbot</p>
+          <span className={cn(
+            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase",
+            num.chatbotStatus === 'active' ? "bg-indigo-50 text-indigo-600" : "bg-slate-50 text-slate-400"
+          )}>
+            {num.chatbotStatus || 'inactive'}
+          </span>
+        </div>
       </div>
     </div>
 
     <div className="pt-3 mt-auto border-t border-slate-50 flex items-center justify-between">
       <div>
-        <p className="text-[9px] font-medium text-slate-400 mb-0.5 uppercase tracking-wider">Status</p>
+        <p className="text-[9px] font-medium text-slate-400 mb-0.5 uppercase tracking-wider">Internal Hub Status</p>
         <span className={cn(
           "inline-flex items-center gap-1.5 text-[9px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider border",
           num.isActive ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-slate-400 bg-slate-50 border-slate-100"
@@ -86,7 +111,7 @@ export default function WhatsAppPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const currentLimit = 6;
+  const currentLimit = 10;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -98,6 +123,15 @@ export default function WhatsAppPage() {
 
   useEffect(() => {
     dispatch(fetchWhatsapp({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
+
+    const socket = getSocket();
+    socket.on('whatsapp_status_update', (update: { whatsappId: string; whatsappStatus: string; chatbotStatus: string }) => {
+      dispatch(syncStatusUpdate(update));
+    });
+
+    return () => {
+      socket.off('whatsapp_status_update');
+    };
   }, [dispatch, currentPage, debouncedSearch]);
 
   const handleOpenModal = (num: any = null) => {
@@ -137,11 +171,11 @@ export default function WhatsAppPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this WhatsApp number?")) {
+    if (window.confirm("Are you sure you want to delete this WhatsApp number? This will notify admin to unlink.")) {
       try {
         const resultAction = await dispatch(deleteWhatsapp(id));
         if (deleteWhatsapp.fulfilled.match(resultAction)) {
-          toast.success("WhatsApp number deleted successfully!");
+          toast.success("Deletion requested successfully!");
           dispatch(fetchWhatsapp({ page: currentPage, limit: currentLimit, search: debouncedSearch }));
         } else {
           toast.error(resultAction.payload as string || "Failed to delete WhatsApp number");
@@ -184,43 +218,71 @@ export default function WhatsAppPage() {
       header: 'Phone Number',
       key: 'number',
       render: (num: any) => (
-        <div className="text-sm text-slate-600">
+        <div className="text-sm text-slate-600 font-medium">
           {num.number}
         </div>
       )
     },
     {
-      header: 'Status',
-      key: 'status',
+      header: 'Connection Health',
+      key: 'whatsappStatus',
       render: (num: any) => (
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 min-w-[70px]">
-            <div className={cn(
-              "w-1 h-1 rounded-full",
-              num.isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
-            )} />
-            <span className={cn(
-              "text-sm",
-              num.isActive ? "text-emerald-600" : "text-slate-400"
-            )}>
-              {num.isActive ? 'Active' : 'Inactive'}
-            </span>
-          </div>
-          <button 
-            onClick={() => handleStatusToggle(num._id, num.isActive)}
-            className={cn(
-              "relative w-8 h-4.5 rounded-full transition-colors duration-200 focus:outline-none",
-              num.isActive ? "bg-emerald-500" : "bg-slate-200"
-            )}
-          >
-            <div className={cn(
-              "absolute top-0.5 left-0.5 bg-white w-3.5 h-3.5 rounded-full transition-transform duration-200",
-              num.isActive ? "translate-x-3.5" : "translate-x-0"
-            )} />
-          </button>
+        <div className="flex items-center gap-1.5">
+           <span className={cn(
+             "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border",
+             num.whatsappStatus === 'connected' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-rose-50 text-rose-600 border-rose-100"
+           )}>
+             {num.whatsappStatus || 'disconnected'}
+           </span>
         </div>
       )
     },
+    {
+      header: 'Chatbot Engine',
+      key: 'chatbotStatus',
+      render: (num: any) => (
+        <div className="flex items-center gap-1.5">
+           <span className={cn(
+             "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border",
+             num.chatbotStatus === 'active' ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-slate-400 border-slate-100"
+           )}>
+             {num.chatbotStatus === 'active' ? 'Active' : 'Inactive'}
+           </span>
+        </div>
+      )
+    },
+    // {
+    //   header: 'Hub Status',
+    //   key: 'status',
+    //   render: (num: any) => (
+    //     <div className="flex items-center gap-3">
+    //       <div className="flex items-center gap-1.5 min-w-[70px]">
+    //         <div className={cn(
+    //           "w-1 h-1 rounded-full",
+    //           num.isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
+    //         )} />
+    //         <span className={cn(
+    //           "text-[10px] font-bold uppercase tracking-widest",
+    //           num.isActive ? "text-emerald-600" : "text-slate-400"
+    //         )}>
+    //           {num.isActive ? 'Active' : 'Inactive'}
+    //         </span>
+    //       </div>
+    //       <button 
+    //         onClick={() => handleStatusToggle(num._id, num.isActive)}
+    //         className={cn(
+    //           "relative w-8 h-4.5 rounded-full transition-colors duration-200 focus:outline-none",
+    //           num.isActive ? "bg-emerald-500" : "bg-slate-200"
+    //         )}
+    //       >
+    //         <div className={cn(
+    //           "absolute top-0.5 left-0.5 bg-white w-3.5 h-3.5 rounded-full transition-transform duration-200",
+    //           num.isActive ? "translate-x-3.5" : "translate-x-0"
+    //         )} />
+    //       </button>
+    //     </div>
+    //   )
+    // },
     {
       header: 'Actions',
       key: 'actions',
@@ -235,7 +297,11 @@ export default function WhatsAppPage() {
           </button>
           <button 
             onClick={() => handleDelete(num._id)}
-            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition-all"
+            className={cn(
+              "p-1.5 rounded-lg transition-all",
+              num.deleteRequested ? "text-rose-600 bg-rose-50" : "text-slate-400 hover:text-rose-600 hover:bg-slate-50"
+            )}
+            title={num.deleteRequested ? "Deletion requested" : "Delete Hub"}
           >
             <Trash2 size={14} />
           </button>
@@ -248,12 +314,14 @@ export default function WhatsAppPage() {
     <div className="mx-auto space-y-4 pb-20 px-6 pt-5">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 border-b border-slate-100 pb-4">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">WhatsApp Numbers</h1>
-          {/* <p className="text-xs text-slate-400 flex items-center gap-2">
-            <MessageSquare size={12} className="text-indigo-500" />
-            Business Communication Management
-          </p> */}
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900 tracking-tight leading-none mb-1">WhatsApp Hub</h1>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+              <Zap size={10} className="text-amber-500" />
+              Unified Communication Engine
+            </p>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
@@ -282,10 +350,10 @@ export default function WhatsAppPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 bg-indigo-600 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all shadow-md shadow-indigo-100"
+            className="flex items-center gap-2 bg-indigo-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-white transition-all shadow-lg shadow-indigo-100 hover:bg-indigo-700"
           >
             <Plus size={14} />
-            New Hub
+            Add New Hub
           </motion.button>
         </div>
       </div>

@@ -38,7 +38,7 @@ export const markNotificationRead = createAsyncThunk(
   'notification/markNotificationRead',
   async (id: string, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/notifications/${id}/read`);
+      const response = await axios.patch(`/notifications/${id}/read`);
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to mark as read');
@@ -50,7 +50,7 @@ export const markAllNotificationsRead = createAsyncThunk(
   'notification/markAllNotificationsRead',
   async (_, { rejectWithValue }) => {
     try {
-      await axios.put('/notifications/read-all');
+      await axios.patch('/notifications/read-all');
       return true;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to mark all as read');
