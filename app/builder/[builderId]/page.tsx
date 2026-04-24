@@ -231,9 +231,12 @@ export default function BuilderPublicPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 relative z-10">
             <div className="space-y-6">
                 {logoSrc ? (
-                    <img src={logoSrc} alt="" className="h-12 w-auto brightness-0 invert opacity-80" />
+                    <div className="flex flex-col items-start gap-2">
+                        <img src={logoSrc} alt={builder.companyName} className="h-14 w-auto object-contain max-w-[200px]" />
+                        <div className="h-0.5 w-8 bg-indigo-500 rounded-full" />
+                    </div>
                 ) : (
-                    <div className="text-2xl font-black tracking-tighter uppercase">{builder.companyName}</div>
+                    <div className="text-2xl font-black tracking-tighter uppercase text-white">{builder.companyName}</div>
                 )}
                 <p className="text-slate-500 text-sm leading-relaxed max-w-sm">
                     {builder.websiteDetails?.about?.substring(0, 150) || 'Crafting iconic landmarks and sustainable communities that stand the test of time.'}...
