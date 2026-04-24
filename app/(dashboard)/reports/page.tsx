@@ -162,7 +162,7 @@ export default function ReportsPage() {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(150);
-      doc.text(`Page ${i} of ${pageCount} | Confidential Business Report`, 105, 290, { align: 'center' });
+      doc.text(`Page ${i} of ${pageCount} `, 105, 290, { align: 'center' });
     }
 
     doc.save(`Audit_Report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
